@@ -53,6 +53,12 @@ const FALLBACK_CSS = `
 .config-group-selector-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px; border: none; background: none; cursor: pointer; color: var(--lg-text-primary); }
 .config-group-selector-btn:hover { background: var(--lg-bg-secondary); }
 .config-group-selector-cancel { width: 100%; padding: 6px; border: none; background: var(--lg-bg-secondary); cursor: pointer; font-size: 12px; color: var(--lg-text-muted); }
+.config-tabs { display: flex; margin-bottom: 15px; border-bottom: 2px solid var(--lg-border); }
+.config-tab { flex: 1; padding: 10px; border: none; background: var(--lg-bg-secondary); color: var(--lg-text-muted); cursor: pointer; font-size: 13px; border-radius: 6px 6px 0 0; }
+.config-tab.active { background: var(--lg-bg-primary); color: var(--lg-text-primary); }
+.config-tab-content.hidden { display: none; }
+.config-json-editor { width: 100%; height: 300px; padding: 12px; font-family: monospace; font-size: 12px; border: 1px solid var(--lg-border); border-radius: 6px; background: var(--lg-bg-input); color: var(--lg-text-primary); resize: vertical; box-sizing: border-box; }
+.config-json-hint { font-size: 11px; color: var(--lg-text-muted); margin-top: 8px; }
 `;
 
 const FALLBACK_POPUP_HTML = `
@@ -72,25 +78,37 @@ const FALLBACK_CONFIG_HTML = `
 <h3>⚙️ Configuración de Grupos</h3>
 <div class="label-groups-info">
     <div><strong>Proyecto:</strong> <span id="config-project-name"></span></div>
-    <div style="margin-top: 5px;">Los grupos exclusivos solo permiten una etiqueta activa a la vez.</div>
 </div>
-<div id="config-groups-list" class="config-groups-list"></div>
-<div class="config-add-group">
-    <button class="label-groups-btn label-groups-btn-secondary" id="config-add-group">➕ Añadir grupo</button>
+<div class="config-tabs">
+    <button class="config-tab active" data-tab="visual">🎨 Visual</button>
+    <button class="config-tab" data-tab="json">📄 JSON</button>
 </div>
-<div class="config-project-labels">
-    <div class="config-project-labels-header">
-        <span>📋 Etiquetas del proyecto</span>
-        <button class="label-groups-btn label-groups-btn-secondary" id="config-refresh-labels">🔄</button>
+<div class="config-tab-content" id="config-tab-visual">
+    <div id="config-groups-list" class="config-groups-list"></div>
+    <div class="config-add-group">
+        <button class="label-groups-btn label-groups-btn-secondary" id="config-add-group">➕ Añadir grupo</button>
     </div>
-    <div id="config-available-labels" class="config-available-labels">
-        <span class="config-loading">Cargando etiquetas...</span>
+    <div class="config-project-labels">
+        <div class="config-project-labels-header">
+            <span>📋 Etiquetas del proyecto</span>
+            <button class="label-groups-btn label-groups-btn-secondary" id="config-refresh-labels">🔄</button>
+        </div>
+        <div id="config-available-labels" class="config-available-labels">
+            <span class="config-loading">Cargando etiquetas...</span>
+        </div>
+        <div class="config-project-labels-hint">Haz clic en una etiqueta para añadirla a un grupo</div>
     </div>
-    <div class="config-project-labels-hint">Haz clic en una etiqueta para añadirla a un grupo</div>
+</div>
+<div class="config-tab-content hidden" id="config-tab-json">
+    <div class="config-json-container">
+        <textarea id="config-json-editor" class="config-json-editor" spellcheck="false"></textarea>
+        <div class="config-json-hint">Edita el JSON directamente. Los cambios se validarán al guardar.</div>
+    </div>
 </div>
 <div class="label-groups-buttons">
     <button class="label-groups-btn label-groups-btn-primary" id="config-save">✅ Guardar</button>
     <button class="label-groups-btn label-groups-btn-secondary" id="config-cancel">❌ Cancelar</button>
+    <button class="label-groups-btn label-groups-btn-secondary" id="config-reset">🔄 Restaurar</button>
 </div>
 <div id="config-status"></div>
 `;
