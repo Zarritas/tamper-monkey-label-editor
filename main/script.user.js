@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitLab Label Groups
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.1.0
 // @description  Gestiona etiquetas de GitLab agrupadas mediante quick actions
 // @author       Jesús Lorenzo
 // @match        https://gitlab.com/*/-/issues/*
