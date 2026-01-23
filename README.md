@@ -6,7 +6,9 @@ La configuración se guarda **por proyecto**, lo que significa que cada proyecto
   - Ejemplo: `https://git.factorlibre.com/odoo-16/fl-v16/-/issues/123` → Proyecto: `fl-v16`
 - La configuración se almacena con la clave `labelGroups_<nombre-proyecto>`
 - Al abrir la configuración, se muestra el nombre del proyecto actual
-- Los proyectos nuevos usan la configuración por defecto hasta que la personalices```
+- Los proyectos nuevos usan la configuración por defecto hasta que la personalices
+
+```
   label-groups/
   ├── css/
   │ └── style.css # Estilos del popup
@@ -20,6 +22,7 @@ La configuración se guarda **por proyecto**, lo que significa que cada proyecto
   │ ├── api.js # Comunicación con la API de GitLab
   │ ├── labels.js # Lógica de selección de etiquetas
   │ # 🏷️ GitLab Label Groups
+```
 
 Script de Tampermonkey para gestionar etiquetas de GitLab organizadas en grupos mutuamente excluyentes.
 
