@@ -8,7 +8,13 @@ La configuración se guarda **por proyecto**, lo que significa que cada proyecto
 - Al abrir la configuración, se muestra el nombre del proyecto actual
 - Los proyectos nuevos usan la configuración por defecto hasta que la personalices
 
-```
+### Tema oscuro/claro
+
+El script detecta automáticamente el tema de GitLab:
+
+- Si GitLab está en modo oscuro (`gl-dark`), el popup usa colores oscuros
+- Si GitLab está en modo claro, el popup usa colores claros
+- Como fallback, detecta la preferencia del sistema operativo (`prefers-color-scheme`)```
   label-groups/
   ├── css/
   │ └── style.css # Estilos del popup
@@ -22,7 +28,6 @@ La configuración se guarda **por proyecto**, lo que significa que cada proyecto
   │ ├── api.js # Comunicación con la API de GitLab
   │ ├── labels.js # Lógica de selección de etiquetas
   │ # 🏷️ GitLab Label Groups
-```
 
 Script de Tampermonkey para gestionar etiquetas de GitLab organizadas en grupos mutuamente excluyentes.
 
@@ -33,6 +38,7 @@ Script de Tampermonkey para gestionar etiquetas de GitLab organizadas en grupos 
 - **Configuración por proyecto**: Cada proyecto de GitLab tiene su propia configuración de grupos
 - **Configuración visual**: Edita los grupos desde una interfaz amigable sin tocar código
 - **Etiquetas del proyecto**: Carga automáticamente las etiquetas disponibles desde la API de GitLab
+- **Modo oscuro/claro**: Detecta automáticamente el tema de GitLab y adapta la interfaz
 - **Preserva tu trabajo**: Si tienes texto escrito en el comentario, se mantiene después de aplicar las etiquetas
 - **Quick Actions**: Utiliza los comandos nativos `/label` y `/unlabel` de GitLab
 - **Compatible con Rich Text**: Cambia automáticamente entre editores para garantizar compatibilidad

@@ -7,6 +7,40 @@ function loadStyles() {
   }
 }
 
+function isDarkMode() {
+  // Detectar tema de GitLab
+  const body = document.body;
+  const html = document.documentElement;
+
+  // GitLab usa estas clases/atributos para el tema oscuro
+  if (
+    html.classList.contains("gl-dark") ||
+    body.classList.contains("gl-dark") ||
+    html.dataset.theme === "gl-dark" ||
+    body.dataset.theme === "gl-dark"
+  ) {
+    return true;
+  }
+
+  // Fallback: detectar preferencia del sistema
+  if (
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function applyTheme(popup) {
+  if (isDarkMode()) {
+    popup.classList.add("dark-mode");
+  } else {
+    popup.classList.remove("dark-mode");
+  }
+}
+
 function getPopupHTML() {
   try {
     return GM_getResourceText("POPUP_HTML");
@@ -44,6 +78,7 @@ function createPopup() {
   popup.innerHTML = getPopupHTML();
   overlay.appendChild(popup);
 
+  applyTheme(popup);
   renderLabelGroups(popup);
   bindPopupEvents(popup, overlay);
 
@@ -141,6 +176,8 @@ function createConfigPopup() {
   popup.style.minWidth = "550px";
   popup.innerHTML = getConfigHTML();
   overlay.appendChild(popup);
+
+  applyTheme(popup);
 
   // Mostrar nombre del proyecto
   const projectNameEl = popup.querySelector("#config-project-name");
