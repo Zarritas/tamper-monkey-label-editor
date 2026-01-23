@@ -1,0 +1,491 @@
+.label-groups-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border: 2px solid #6366f1;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  font-family: Poppins, Arial, sans-serif;
+  min-width: 450px;
+  max-width: 550px;
+}
+
+.label-groups-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+.label-groups-popup h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  text-align: center;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.label-groups-info {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 12px;
+  color: #666;
+}
+
+.label-groups-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.label-group {
+  margin-bottom: 20px;
+}
+
+.label-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #555;
+}
+
+.label-group-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.label-group-multi {
+  font-size: 11px;
+  font-weight: normal;
+  color: #888;
+  font-style: italic;
+}
+
+.label-group-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.label-item {
+  padding: 8px 14px;
+  border-radius: 5px;
+  background: #f0f0f0;
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  user-select: none;
+  color: #333;
+}
+
+.label-item:hover {
+  background: #e0e0e0;
+}
+
+.label-item.selected {
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.15);
+  color: #1e7e34;
+}
+
+.label-item.to-remove {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.15);
+  text-decoration: line-through;
+  color: #bd2130;
+}
+
+.label-item.current {
+  font-weight: 500;
+}
+
+.label-groups-preview {
+  margin-top: 15px;
+  padding: 12px;
+  background: #2d2d2d;
+  border-radius: 5px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  color: #a0a0a0;
+  min-height: 40px;
+  white-space: pre-wrap;
+}
+
+.label-groups-preview:empty::before {
+  content: "Haz clic en las etiquetas para seleccionar";
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.label-groups-hint {
+  font-size: 11px;
+  color: #888;
+  margin-top: 8px;
+  text-align: center;
+  font-style: italic;
+}
+
+.label-groups-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.label-groups-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.label-groups-btn-primary {
+  background-color: #6366f1;
+  color: white;
+}
+
+.label-groups-btn-primary:hover {
+  background-color: #4f46e5;
+}
+
+.label-groups-btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.label-groups-btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.label-groups-btn-config {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 5px 10px;
+  font-size: 16px;
+}
+
+.label-groups-loading {
+  text-align: center;
+  color: #6366f1;
+  font-style: italic;
+}
+
+.label-groups-success {
+  text-align: center;
+  color: #28a745;
+  font-weight: bold;
+}
+
+.label-groups-error {
+  text-align: center;
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.label-groups-sidebar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  margin-right: 4px;
+}
+
+.label-groups-sidebar-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+#label-groups-status {
+  margin-top: 10px;
+  text-align: center;
+  min-height: 20px;
+}
+
+/* Config popup styles */
+.config-groups-list {
+  max-height: 350px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.config-group-item {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 12px;
+}
+
+.config-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.config-group-header input[type="text"] {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.config-group-header input[type="color"] {
+  width: 40px;
+  height: 36px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.config-group-delete {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.config-group-delete:hover {
+  background: #bd2130;
+}
+
+.config-group-options {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.config-group-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #555;
+}
+
+.config-group-options input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.config-labels-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  min-height: 42px;
+}
+
+.config-label-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #e9ecef;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 13px;
+}
+
+.config-label-chip button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  line-height: 1;
+}
+
+.config-label-chip button:hover {
+  color: #dc3545;
+}
+
+.config-label-input {
+  border: none;
+  outline: none;
+  padding: 5px;
+  font-size: 13px;
+  min-width: 120px;
+  flex: 1;
+}
+
+.config-label-input::placeholder {
+  color: #aaa;
+}
+
+.config-add-group {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+/* Project labels section */
+.config-project-labels {
+  background: #f0f4f8;
+  border: 1px solid #d1d9e0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+.config-project-labels-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 500;
+  font-size: 13px;
+  color: #555;
+}
+
+.config-project-labels-header button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.config-available-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 8px;
+  background: white;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.config-available-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.config-available-label:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.config-available-label.used {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.config-available-label.used:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.config-project-labels-hint {
+  font-size: 11px;
+  color: #888;
+  margin-top: 8px;
+  text-align: center;
+  font-style: italic;
+}
+
+.config-loading {
+  color: #888;
+  font-style: italic;
+  font-size: 13px;
+  padding: 10px;
+}
+
+.config-labels-container.drag-over {
+  background: #e8f4ff;
+  border-color: #6366f1;
+}
+
+/* Group selector popup */
+.config-group-selector {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 10001;
+  min-width: 150px;
+}
+
+.config-group-selector-title {
+  font-size: 12px;
+  color: #666;
+  padding: 4px 8px 8px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 4px;
+}
+
+.config-group-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.config-group-selector-btn:hover {
+  background: #f0f0f0;
+}
+
+.config-group-selector-cancel {
+  width: 100%;
+  padding: 6px;
+  margin-top: 4px;
+  border: none;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  border-radius: 4px;
+}
+
+.config-group-selector-cancel:hover {
+  background: #e5e5e5;
+}

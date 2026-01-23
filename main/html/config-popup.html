@@ -1,0 +1,52 @@
+<h3>⚙️ Configuración de Grupos</h3>
+<div class="label-groups-info">
+  <div><strong>Proyecto:</strong> <span id="config-project-name"></span></div>
+  <div style="margin-top: 5px">
+    Los grupos exclusivos solo permiten una etiqueta activa a la vez.
+  </div>
+</div>
+
+<div id="config-groups-list" class="config-groups-list">
+  <!-- Los grupos se generan dinámicamente -->
+</div>
+
+<div class="config-add-group">
+  <button
+    class="label-groups-btn label-groups-btn-secondary"
+    id="config-add-group"
+  >
+    ➕ Añadir grupo
+  </button>
+</div>
+
+<div class="config-project-labels">
+  <div class="config-project-labels-header">
+    <span>📋 Etiquetas del proyecto</span>
+    <button
+      class="label-groups-btn label-groups-btn-secondary"
+      id="config-refresh-labels"
+      title="Recargar etiquetas"
+    >
+      🔄
+    </button>
+  </div>
+  <div id="config-available-labels" class="config-available-labels">
+    <span class="config-loading">Cargando etiquetas...</span>
+  </div>
+  <div class="config-project-labels-hint">
+    Arrastra o haz clic en una etiqueta para añadirla a un grupo
+  </div>
+</div>
+
+<div class="label-groups-buttons">
+  <button class="label-groups-btn label-groups-btn-primary" id="config-save">
+    ✅ Guardar
+  </button>
+  <button
+    class="label-groups-btn label-groups-btn-secondary"
+    id="config-cancel"
+  >
+    ❌ Cancelar
+  </button>
+</div>
+<div id="config-status"></div>
