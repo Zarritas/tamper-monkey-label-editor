@@ -108,7 +108,18 @@ label-groups/
 1. Abre el popup de etiquetas (🏷️)
 2. Haz clic en el botón **⚙️** en la esquina superior derecha
 
-### Gestionar grupos
+### Modos de edición
+
+La configuración tiene dos modos que puedes alternar con las pestañas:
+
+| Pestaña | Descripción |
+|---------|-------------|
+| **🎨 Visual** | Interfaz gráfica para gestionar grupos |
+| **📄 JSON** | Editor de texto para editar el JSON directamente |
+
+Los cambios se sincronizan automáticamente entre ambos modos al cambiar de pestaña.
+
+### Gestionar grupos (modo Visual)
 
 Desde la interfaz de configuración puedes:
 
