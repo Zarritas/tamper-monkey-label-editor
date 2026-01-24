@@ -241,13 +241,32 @@ class ConfigPopup extends TM.Component {
         const group = this.state.groups[groupName];
         if (!group) return;
         
+        // Check if label is already in target group
+        if (group.labels.includes(labelName)) {
+            return; // No change needed
+        }
+        
+        let changed = false;
+        
+        // Remove from other groups
         Object.values(this.state.groups).forEach(g => {
-            g.labels = g.labels.filter(l => l !== labelName);
+            if (g.labels.includes(labelName)) {
+                g.labels = g.labels.filter(l => l !== labelName);
+                changed = true;
+            }
         });
         
+        // Add to target group
         if (!group.labels.includes(labelName)) {
             group.labels.push(labelName);
+            changed = true;
         }
+        
+        // Only re-render if something changed
+        if (changed) {
+            this.renderVisualGroups();
+        }
+    }
         
         this.renderVisualGroups();
         this.renderProjectLabels();
@@ -281,7 +300,10 @@ class ConfigPopup extends TM.Component {
             newGroups[newName] = { color, exclusive, labels };
         });
         
-        this.state.groups = newGroups;
+        // Only update state if groups actually changed
+        if (JSON.stringify(this.state.groups) !== JSON.stringify(newGroups)) {
+            this.state.groups = newGroups;
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════

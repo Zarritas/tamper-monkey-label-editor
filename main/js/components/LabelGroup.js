@@ -112,9 +112,17 @@ class LabelGroup extends TM.Component {
     }
 
     notifyChange() {
-        const changes = this.getChanges();
-        this.props.onChange?.(this.props.name, changes);
-        this.emit('change', { groupName: this.props.name, changes });
+        // Debounce change notifications to prevent excessive updates
+        if (this._changeTimeout) {
+            clearTimeout(this._changeTimeout);
+        }
+        
+        this._changeTimeout = setTimeout(() => {
+            const changes = this.getChanges();
+            this.props.onChange?.(this.props.name, changes);
+            this.emit('change', { groupName: this.props.name, changes });
+            this._changeTimeout = null;
+        }, 50); // Debounce rapid changes
     }
 
     /**
@@ -158,6 +166,10 @@ class LabelGroup extends TM.Component {
     }
 
     onDestroy() {
+        if (this._changeTimeout) {
+            clearTimeout(this._changeTimeout);
+            this._changeTimeout = null;
+        }
         this._chips?.forEach(chip => chip.destroy());
     }
 }
