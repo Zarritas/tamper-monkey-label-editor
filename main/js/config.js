@@ -63,7 +63,7 @@ const LabelConfig = (function() {
         const stored = TM.storage.get(key);
         
         if (stored && typeof stored === 'object') {
-            return stored;
+            return TM.deepClone(stored);
         }
         
         return TM.deepClone(DEFAULT_GROUPS);
@@ -177,6 +177,10 @@ const LabelConfig = (function() {
             for (const [name, group] of Object.entries(groups)) {
                 if (!group.color || !Array.isArray(group.labels)) {
                     throw new Error(`Grupo "${name}" inválido`);
+                }
+                
+                if (typeof group.exclusive !== 'boolean') {
+                    throw new Error(`Grupo "${name}" inválido: la propiedad "exclusive" debe ser booleana`);
                 }
             }
             

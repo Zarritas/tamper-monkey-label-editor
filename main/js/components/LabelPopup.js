@@ -122,7 +122,7 @@ class LabelPopup extends TM.Component {
         this.state.changes = allChanges;
     }
 
-    handleApply() {
+    async handleApply() {
         const { changes } = this.state;
         
         if (changes.toAdd.length === 0 && changes.toRemove.length === 0) {
@@ -130,23 +130,37 @@ class LabelPopup extends TM.Component {
             return;
         }
         
-        this.state.loading = true;
-        
-        const success = TM.gitlab.applyLabelsViaQuickAction(changes.toAdd, changes.toRemove);
-        
-        if (success) {
-            setTimeout(() => {
-                TM.gitlab.submitComment();
-                
-                TM.Toast.success(`Aplicado: +${changes.toAdd.length} -${changes.toRemove.length} etiquetas`);
-                
-                this.props.onApply?.(changes);
-                this.emit('apply', changes);
-                
-                setTimeout(() => this.props.onClose?.(), 500);
-            }, 100);
-        } else {
+        try {
+            this.state.loading = true;
+            
+            // Apply labels via Quick Action
+            const applyResult = await TM.gitlab.applyLabelsViaQuickAction(changes.toAdd, changes.toRemove);
+            
+            if (!applyResult?.success) {
+                throw new Error(applyResult?.error || 'Failed to apply labels');
+            }
+            
+            // Submit comment to execute the quick actions
+            const commentResult = await TM.gitlab.submitComment();
+            
+            if (!commentResult?.success) {
+                throw new Error(commentResult?.error || 'Failed to submit comment');
+            }
+            
+            TM.Toast.success(`Aplicado: +${changes.toAdd.length} -${changes.toRemove.length} etiquetas`);
+            
+            // Call callbacks and emit events after successful operations
+            this.props.onApply?.(changes);
+            this.emit('apply', changes);
+            
+            // Close popup deterministically after successful operations
+            this.props.onClose?.();
+            
+        } catch (error) {
+            console.error('[Label Popup] Error applying labels:', error);
             TM.Toast.error('Error al aplicar etiquetas');
+        } finally {
+            // Always reset loading state
             this.state.loading = false;
         }
     }

@@ -160,28 +160,85 @@ class ConfigPopup extends TM.Component {
     createGroupElement(groupName, group) {
         const div = document.createElement('div');
         div.className = 'config-group-item';
-        div.dataset.groupName = groupName;
+        // Set dataset safely after validation
+        if (typeof groupName === 'string' && groupName.trim()) {
+            div.dataset.groupName = groupName.trim();
+        }
         
-        div.innerHTML = TM.html`
-            <div class="config-group-header">
-                <input type="color" class="config-group-color" value="${group.color}" title="Color">
-                <input type="text" class="config-group-name tm-input tm-input--sm" value="${groupName}" placeholder="Nombre">
-                <label class="config-group-exclusive">
-                    <input type="checkbox" ${group.exclusive !== false ? 'checked' : ''}> Exclusivo
-                </label>
-                <button class="tm-btn tm-btn--danger tm-btn--icon tm-btn--sm config-group-delete" title="Eliminar">🗑️</button>
-            </div>
-            <div class="config-group-labels">
-                ${group.labels.map(label => `
-                    <span class="config-label-chip" data-label="${label}">
-                        ${label}
-                        <button class="config-label-remove">×</button>
-                    </span>
-                `).join('')}
-                <input type="text" class="config-label-input tm-input tm-input--sm" 
-                       placeholder="Nueva etiqueta + Enter" style="width: 150px;">
-            </div>
-        `;
+        // Create header
+        const header = document.createElement('div');
+        header.className = 'config-group-header';
+        
+        // Color input
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.className = 'config-group-color';
+        colorInput.value = group.color || '#000000';
+        colorInput.title = 'Color';
+        header.appendChild(colorInput);
+        
+        // Name input
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'config-group-name tm-input tm-input--sm';
+        nameInput.value = groupName;
+        nameInput.placeholder = 'Nombre';
+        header.appendChild(nameInput);
+        
+        // Exclusive checkbox
+        const exclusiveLabel = document.createElement('label');
+        exclusiveLabel.className = 'config-group-exclusive';
+        
+        const exclusiveCheckbox = document.createElement('input');
+        exclusiveCheckbox.type = 'checkbox';
+        exclusiveCheckbox.checked = group.exclusive !== false;
+        exclusiveLabel.appendChild(exclusiveCheckbox);
+        
+        const exclusiveText = document.createTextNode(' Exclusivo');
+        exclusiveLabel.appendChild(exclusiveText);
+        header.appendChild(exclusiveLabel);
+        
+        // Delete button
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'tm-btn tm-btn--danger tm-btn--icon tm-btn--sm config-group-delete';
+        deleteButton.title = 'Eliminar';
+        deleteButton.textContent = '🗑️';
+        header.appendChild(deleteButton);
+        
+        div.appendChild(header);
+        
+        // Create labels container
+        const labelsContainer = document.createElement('div');
+        labelsContainer.className = 'config-group-labels';
+        
+        // Add existing labels safely
+        if (Array.isArray(group.labels)) {
+            group.labels.forEach(label => {
+                if (typeof label === 'string' && label.trim()) {
+                    const labelChip = document.createElement('span');
+                    labelChip.className = 'config-label-chip';
+                    labelChip.dataset.label = label.trim();
+                    labelChip.textContent = label.trim();
+                    
+                    const removeButton = document.createElement('button');
+                    removeButton.className = 'config-label-remove';
+                    removeButton.textContent = '×';
+                    
+                    labelChip.appendChild(removeButton);
+                    labelsContainer.appendChild(labelChip);
+                }
+            });
+        }
+        
+        // Add label input
+        const labelInput = document.createElement('input');
+        labelInput.type = 'text';
+        labelInput.className = 'config-label-input tm-input tm-input--sm';
+        labelInput.placeholder = 'Nueva etiqueta + Enter';
+        labelInput.style.width = '150px';
+        labelsContainer.appendChild(labelInput);
+        
+        div.appendChild(labelsContainer);
         
         this.bindGroupEvents(div, groupName);
         
@@ -267,7 +324,8 @@ class ConfigPopup extends TM.Component {
             this.renderVisualGroups();
         }
     }
-        
+
+    selectGroup(groupName) {
         this.renderVisualGroups();
         this.renderProjectLabels();
         
@@ -281,6 +339,7 @@ class ConfigPopup extends TM.Component {
                 this.state.selectedGroup = groupName;
             }
         });
+    }
     }
 
     collectVisualData() {

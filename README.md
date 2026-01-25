@@ -25,17 +25,18 @@ Script de Tampermonkey para gestionar etiquetas de GitLab organizadas en grupos 
 
 ```
 label-editor/
-├── css/
-│   └── styles.css              # Estilos específicos del editor
-├── js/
-│   ├── config.js               # Gestión de configuración y storage
-│   ├── app.js                  # Clase principal LabelGroupsApp
-│   └── components/
-│       ├── LabelChip.js        # Etiqueta individual con estados
-│       ├── LabelGroup.js       # Grupo de etiquetas con exclusividad
-│       ├── LabelPopup.js       # Popup principal de selección
-│       └── ConfigPopup.js      # Popup de configuración
-├── main.user.js                # Entry point (instalar en Tampermonkey)
+├── main/
+│   ├── css/
+│   │   └── style.css           # Estilos específicos del editor
+│   ├── script.user.js          # Entry point (instalar en Tampermonkey)
+│   └── js/
+│       ├── config.js            # Gestión de configuración y storage
+│       ├── app.js               # Clase principal LabelGroupsApp
+│       └── components/
+│           ├── LabelChip.js     # Etiqueta individual con estados
+│           ├── LabelGroup.js    # Grupo de etiquetas con exclusividad
+│           ├── LabelPopup.js    # Popup principal de selección
+│           └── ConfigPopup.js   # Popup de configuración
 └── README.md
 ```
 
@@ -50,7 +51,7 @@ label-editor/
 
 1. **Crea un nuevo script** en Tampermonkey
 
-2. **Copia el contenido** de `main.user.js`:
+2. **Copia el contenido** de `script.user.js`:
 
 ```javascript
 // ==UserScript==
@@ -72,7 +73,7 @@ label-editor/
 // @require      https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/js/components/ConfigPopup.js
 // @require      https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/js/app.js
 // @resource     TM_CSS https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-styles.css
-// @resource     APP_CSS https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/css/styles.css
+// @resource     APP_CSS https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/css/style.css
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @grant        GM_setValue

@@ -160,8 +160,66 @@ class LabelGroupsApp {
     /**
      * Handle labels applied
      */
-    handleApply(changes) {
-        console.log('[Label Groups] Applied:', changes);
+    async handleApply(changes) {
+        try {
+            if (!changes || (!changes.labelsAdded?.length && !changes.labelsRemoved?.length)) {
+                console.log('[Label Groups] No changes to apply');
+                return;
+            }
+
+            // Generate Quick Action commands
+            const quickActions = [];
+            
+            // Add label commands
+            if (changes.labelsAdded?.length) {
+                changes.labelsAdded.forEach(label => {
+                    quickActions.push(`/label ${label}`);
+                });
+            }
+            
+            // Remove label commands
+            if (changes.labelsRemoved?.length) {
+                changes.labelsRemoved.forEach(label => {
+                    quickActions.push(`/unlabel ${label}`);
+                });
+            }
+
+            if (quickActions.length === 0) {
+                console.log('[Label Groups] No valid quick actions generated');
+                return;
+            }
+
+            // Concatenate into single comment body
+            const commentBody = quickActions.join('\n');
+            
+            // Get project and issue/MR identifiers from context
+            const projectInfo = TM.gitlab.getProjectInfo();
+            const issueInfo = TM.gitlab.getIssueInfo();
+            
+            if (!projectInfo || !issueInfo) {
+                console.error('[Label Groups] Could not get project or issue information');
+                TM.Toast.error('No se pudo obtener información del proyecto/issue');
+                return;
+            }
+
+            // Submit comment with Quick Actions to GitLab
+            const result = await TM.gitlab.submitComment({
+                body: commentBody,
+                projectId: projectInfo.id,
+                issueIid: issueInfo.iid
+            });
+
+            if (result?.success) {
+                console.log('[Label Groups] Labels applied successfully:', quickActions);
+                TM.Toast.success(`Etiquetas aplicadas: +${changes.labelsAdded?.length || 0} -${changes.labelsRemoved?.length || 0}`);
+            } else {
+                console.error('[Label Groups] Failed to apply labels:', result?.error);
+                TM.Toast.error('Error al aplicar etiquetas');
+            }
+        } catch (error) {
+            console.error('[Label Groups] Error applying labels:', error);
+            TM.Toast.error('Error al aplicar etiquetas');
+        }
     }
 
     /**
