@@ -1,83 +1,44 @@
 // ==UserScript==
-// @name         GitLab Label Groups
+// @name         GitLab Label Groups (TM Framework)
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Gestiona etiquetas de GitLab agrupadas mediante quick actions
+// @version      2.0.0
+// @description  Gestiona etiquetas de GitLab organizadas en grupos mutuamente excluyentes
 // @author       Jesús Lorenzo
 // @match        https://gitlab.com/*/-/issues/*
 // @match        https://gitlab.com/*/-/merge_requests/*
 // @match        https://git.factorlibre.com/*/-/issues/*
 // @match        https://git.factorlibre.com/*/-/merge_requests/*
+// @require      https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-framework.js
+// @require      https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-gitlab.js
+// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/js/config.js
+// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/js/components/LabelChip.js
+// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/js/components/LabelGroup.js
+// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/js/components/LabelPopup.js
+// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/js/components/ConfigPopup.js
+// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/js/app.js
+// @resource     TM_CSS https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-styles.css
+// @resource     APP_CSS https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/css/styles.css
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
-// @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_deleteValue
+// @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
-// @connect      gitlab.com
-// @connect      git.factorlibre.com
-// @connect      *
-// @resource     POPUP_CSS   https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/css/style.css
-// @resource     POPUP_HTML  https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/html/popup.html
-// @resource     CONFIG_HTML https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/html/config-popup.html
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/fallback.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/config.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/state.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/api.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/labels.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/gitlab.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/ui.js
-// @updateURL    https://github.com/FlJesusLorenzo/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
-// @downloadURL  https://github.com/FlJesusLorenzo/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
 // ==/UserScript==
 
-(function () {
-  "use strict";
+(function() {
+    'use strict';
 
-  function addSidebarButton(editButton) {
-    State.button = document.createElement("button");
-    State.button.className = "label-groups-sidebar-btn";
-    State.button.innerHTML = "🏷️";
-    State.button.title = "Gestionar etiquetas por grupos";
-    State.button.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      createPopup();
-    });
+    GM_addStyle(GM_getResourceText('TM_CSS'));
+    GM_addStyle(GM_getResourceText('APP_CSS'));
 
-    editButton.parentElement.insertBefore(State.button, editButton);
-  }
-
-  function startObserver() {
-    const observer = new MutationObserver(() => {
-      const labelsSection = document.querySelector(
-        "[data-testid='sidebar-labels']",
-      );
-      if (!labelsSection) return;
-
-      const editButton = labelsSection.querySelector(
-        "[data-testid='edit-button']",
-      );
-      if (!editButton || State.button) return;
-
-      addSidebarButton(editButton);
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-
-  function init() {
-    const path = globalThis.location.pathname;
-    if (!path.includes("/issues/") && !path.includes("/merge_requests/")) {
-      return;
+    if (TM.gitlab.isGitLab()) {
+        TM.gitlab.waitForSidebar().then(() => {
+            const app = new LabelGroupsApp();
+            app.init();
+        }).catch(err => {
+            console.warn('[Label Groups] Sidebar not found:', err);
+        });
     }
-
-    loadStyles();
-    startObserver();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
 })();
