@@ -212,6 +212,7 @@ class LabelGroupsApp {
             if (result?.success) {
                 console.log('[Label Groups] Labels applied successfully:', quickActions);
                 TM.Toast.success(`Etiquetas aplicadas: +${changes.labelsAdded?.length || 0} -${changes.labelsRemoved?.length || 0}`);
+                this.modal.close();
             } else {
                 console.error('[Label Groups] Failed to apply labels:', result?.error);
                 TM.Toast.error('Error al aplicar etiquetas');

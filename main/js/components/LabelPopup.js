@@ -14,14 +14,14 @@ class LabelPopup extends TM.Component {
 
     initialState() {
         return {
+            groups: this.props.groups,
             loading: false,
             changes: { toAdd: [], toRemove: [] }
         };
     }
 
     render() {
-        const { groups } = this.props;
-        const { loading, changes } = this.state;
+        const { groups, loading, changes } = this.state;
         
         const hasChanges = changes.toAdd.length > 0 || changes.toRemove.length > 0;
         const projectName = LabelConfig.getProjectName();
@@ -184,9 +184,8 @@ class LabelPopup extends TM.Component {
      * Update with new groups config
      */
     updateGroups(groups) {
-        this.props.groups = groups;
+        this.setState({ groups, changes: { toAdd: [], toRemove: [] } });
         this.renderGroups();
-        this.state.changes = { toAdd: [], toRemove: [] };
     }
 
     onDestroy() {

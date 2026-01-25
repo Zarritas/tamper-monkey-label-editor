@@ -152,7 +152,8 @@ const LabelConfig = (function() {
      * Get current labels on the issue/MR
      */
     function getCurrentLabels() {
-        return TM.gitlab.getCurrentLabels().map(l => l.name);
+        const labels = TM.gitlab.getCurrentLabels();
+        return (labels ?? []).map(l => l.name);
     }
 
     /**

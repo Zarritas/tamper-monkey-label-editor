@@ -23,7 +23,7 @@ Script de Tampermonkey para gestionar etiquetas de GitLab organizadas en grupos 
 
 ## 📁 Estructura del Proyecto
 
-```
+```text
 label-editor/
 ├── main/
 │   ├── css/
@@ -223,7 +223,7 @@ El editor está construido con [TM Framework](https://github.com/Zarritas/tm-fra
 
 ### Arquitectura
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      LabelGroupsApp                         │
 │  - Crea Modal                                               │
@@ -260,12 +260,12 @@ El editor está construido con [TM Framework](https://github.com/Zarritas/tm-fra
 ### Modificar el código
 
 1. Clona el repositorio
-2. Edita los archivos en `js/` y `css/`
+2. Edita los archivos en `main/js` y `main/css`
 3. En Tampermonkey, cambia los `@require` para apuntar a tus archivos locales:
 
 ```javascript
-// @require      file:///ruta/a/tu/proyecto/js/config.js
-// @require      file:///ruta/a/tu/proyecto/js/components/LabelChip.js
+// @require      file:///ruta/a/tu/proyecto/main/js/config.js
+// @require      file:///ruta/a/tu/proyecto/main/js/components/LabelChip.js
 // ...
 ```
 

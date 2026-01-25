@@ -340,7 +340,6 @@ class ConfigPopup extends TM.Component {
             }
         });
     }
-    }
 
     collectVisualData() {
         const container = this.refs.groupsList;
@@ -397,16 +396,22 @@ class ConfigPopup extends TM.Component {
             Object.values(groups).flatMap(g => g.labels)
         );
         
-        container.innerHTML = projectLabels.map(label => {
+        // Clear container first
+        container.innerHTML = '';
+        
+        // Create safe DOM nodes for each label
+        projectLabels.forEach(label => {
             const isAssigned = assignedLabels.has(label.name);
-            return `
-                <span class="config-project-label ${isAssigned ? 'config-project-label--assigned' : ''}"
-                      data-label="${label.name}"
-                      style="border-color: ${label.color}; ${isAssigned ? 'opacity: 0.5;' : ''}">
-                    ${label.name}
-                </span>
-            `;
-        }).join('');
+            const span = document.createElement('span');
+            span.className = `config-project-label ${isAssigned ? 'config-project-label--assigned' : ''}`;
+            span.setAttribute('data-label', label.name);
+            span.style.borderColor = label.color;
+            if (isAssigned) {
+                span.style.opacity = '0.5';
+            }
+            span.textContent = label.name;
+            container.appendChild(span);
+        });
         
         container.querySelectorAll('.config-project-label').forEach(labelEl => {
             labelEl.addEventListener('click', () => {
