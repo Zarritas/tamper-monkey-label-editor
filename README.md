@@ -1,233 +1,333 @@
-### Configuración por proyecto
-
-La configuración se guarda **por proyecto**, lo que significa que cada proyecto de GitLab puede tener sus propios grupos de etiquetas personalizados.
-
-- El nombre del proyecto se extrae de la URL
-  - Ejemplo: `https://git.factorlibre.com/odoo-16/fl-v16/-/issues/123` → Proyecto: `fl-v16`
-- La configuración se almacena con la clave `labelGroups_<nombre-proyecto>`
-- Al abrir la configuración, se muestra el nombre del proyecto actual
-- Los proyectos nuevos usan la configuración por defecto hasta que la personalices
-
-### Tema oscuro/claro
-
-El script detecta automáticamente el tema de GitLab:
-
-- Si GitLab está en modo oscuro (`gl-dark`), el popup usa colores oscuros
-- Si GitLab está en modo claro, el popup usa colores claros
-- Como fallback, detecta la preferencia del sistema operativo (`prefers-color-scheme`)```
-  label-groups/
-  ├── css/
-  │ └── style.css # Estilos del popup
-  ├── html/
-  │ ├── popup.html # HTML del popup principal
-  │ └── config-popup.html # HTML del popup de configuración
-  ├── js/
-  │ ├── fallback.js # CSS/HTML de fallback
-  │ ├── config.js # Gestión de configuración
-  │ ├── state.js # Estado global de la aplicación
-  │ ├── api.js # Comunicación con la API de GitLab
-  │ ├── labels.js # Lógica de selección de etiquetas
-  │ # 🏷️ GitLab Label Groups
+# GitLab Label Groups
 
 Script de Tampermonkey para gestionar etiquetas de GitLab organizadas en grupos mutuamente excluyentes.
 
-## ✨ Características
+**Versión:** 2.0.0 (TM Framework)
 
-- **Etiquetas agrupadas**: Organiza tus etiquetas en grupos lógicos (Área, Prioridad, Estado, Tipo, etc.)
-- **Exclusividad por grupo**: Al seleccionar una etiqueta, se elimina automáticamente cualquier otra del mismo grupo
-- **Configuración por proyecto**: Cada proyecto de GitLab tiene su propia configuración de grupos
-- **Configuración visual**: Edita los grupos desde una interfaz amigable sin tocar código
-- **Etiquetas del proyecto**: Carga automáticamente las etiquetas disponibles desde la API de GitLab
-- **Modo oscuro/claro**: Detecta automáticamente el tema de GitLab y adapta la interfaz
-- **Preserva tu trabajo**: Si tienes texto escrito en el comentario, se mantiene después de aplicar las etiquetas
-- **Quick Actions**: Utiliza los comandos nativos `/label` y `/unlabel` de GitLab
-- **Compatible con Rich Text**: Cambia automáticamente entre editores para garantizar compatibilidad
+## Características
 
-## 📸 Capturas de pantalla
+### Gestión de Etiquetas
 
-<!-- Añadir capturas de pantalla aquí -->
+- **Etiquetas agrupadas** - Organiza etiquetas en grupos lógicos (Prioridad, Estado, Tipo, etc.)
+- **Grupos exclusivos** - Al seleccionar una etiqueta, se elimina automáticamente cualquier otra del mismo grupo
+- **Grupos no exclusivos** - Permite selección múltiple dentro del mismo grupo
+- **Selección visual** - Clic para seleccionar, doble clic para marcar eliminación
+- **Preview de comandos** - Visualiza los comandos `/label` y `/unlabel` antes de aplicar
 
-## 🚀 Instalación
+### Configuración
 
-### Requisitos previos
+- **Configuración por proyecto** - Cada proyecto GitLab tiene su propia configuración
+- **Editor visual de grupos** - Interfaz amigable para crear/editar/eliminar grupos
+- **Drag & drop** - Arrastra etiquetas del proyecto a los grupos
+- **Color personalizado** - Asigna colores a cada grupo
+- **Carga automática** - Las etiquetas del proyecto se cargan desde la API de GitLab
 
-- Navegador con [Tampermonkey](https://www.tampermonkey.net/) instalado
+### Integración GitLab
+
+- **Quick Actions** - Usa comandos nativos `/label` y `/unlabel`
+- **Compatible Rich Text** - Cambia automáticamente entre editores
+- **Preserva contenido** - Mantiene el texto del comentario después de aplicar
+- **Issues y MRs** - Funciona en issues y merge requests
+
+### UI/UX
+
+- **Tema automático** - Detecta modo oscuro/claro de GitLab
+- **Botón en sidebar** - Acceso rápido junto a la sección Labels
+- **Modales responsivos** - Interfaz adaptada al espacio disponible
+
+## Arquitectura (v2.0.0)
+
+El script usa **TM Framework** para una arquitectura basada en componentes reactivos.
+
+### Estructura del Proyecto
+
+```
+tamper-monkey-label-editor/
+├── main/
+│   ├── components/
+│   │   ├── LabelEditorApp.js      # Componente principal (orquestador)
+│   │   ├── LabelGroupsModal.js    # Modal de selección de etiquetas
+│   │   ├── LabelGroup.js          # Grupo de etiquetas
+│   │   ├── LabelConfigModal.js    # Modal de configuración
+│   │   └── ConfigGroupItem.js     # Item de grupo editable
+│   ├── services/
+│   │   ├── storage.js             # Wrapper GM_getValue/GM_setValue
+│   │   └── gitlab-api.js          # API GitLab con cache
+│   ├── styles/
+│   │   └── label-editor.css       # Estilos BEM con variables CSS
+│   └── script.user.js             # Entry point
+└── README.md
+```
+
+### Componentes
+
+| Componente | Descripción | LOC |
+|------------|-------------|-----|
+| `LabelEditorApp` | Orquestador principal, estado reactivo, integración GitLab | 482 |
+| `LabelConfigModal` | Modal de configuración con editor de grupos | 364 |
+| `ConfigGroupItem` | Grupo editable con drag & drop | 184 |
+| `LabelGroupsModal` | Modal principal de selección | 141 |
+| `LabelGroup` | Grupo con header y etiquetas | 101 |
+
+### Servicios
+
+| Servicio | Descripción |
+|----------|-------------|
+| `LabelEditorStorage` | Wrapper para GM_getValue/GM_setValue con gestión por proyecto |
+| `GitLabAPI` | Wrapper para API de GitLab con cache de 5 minutos |
+
+### Estado Reactivo
+
+```javascript
+{
+    // Selección (transient)
+    selectedLabels: Set<string>,      // Etiquetas a añadir
+    labelsToRemove: Set<string>,      // Etiquetas a eliminar
+    currentLabels: Set<string>,       // Etiquetas actuales en issue/MR
+
+    // Configuración (persistente)
+    groups: {
+        [groupName]: {
+            color: string,
+            exclusive: boolean,
+            labels: string[]
+        }
+    },
+
+    // API (cached)
+    projectLabels: Array<{name, color, description}>,
+
+    // UI
+    showMainModal: boolean,
+    showConfigModal: boolean,
+    isLoading: boolean
+}
+```
+
+## Instalación
+
+### Requisitos
+
+- Navegador con [Tampermonkey](https://www.tampermonkey.net/)
+- [TM Framework](https://github.com/user/tm-framework) (se carga automáticamente)
 
 ### Pasos
 
-1. **Instala Tampermonkey** en tu navegador si aún no lo tienes
-2. **Crea un nuevo script** en Tampermonkey
-3. **Copia el contenido** de `main.user.js`
-4. **Actualiza las URLs** reemplazando `USER/REPO` con tu usuario y repositorio de GitHub:
+1. **Instala Tampermonkey** en tu navegador
+2. **Instala el script** desde el archivo `main/script.user.js`
+3. **Configura los dominios** si usas GitLab privado:
 
 ```javascript
-// @resource     POPUP_CSS   https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/css/style.css
-// @resource     POPUP_HTML  https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/html/popup.html
-// @resource     CONFIG_HTML https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/html/config-popup.html
-// @require      https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/js/fallback.js
-// @require      https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/js/config.js
-// @require      https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/js/state.js
-// @require      https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/js/labels.js
-// @require      https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/js/gitlab.js
-// @require      https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/label-groups/js/ui.js
-```
-
-5. **Añade los dominios** de tu instancia de GitLab en los `@match`:
-
-```javascript
-// @match        https://gitlab.com/*/-/issues/*
-// @match        https://gitlab.com/*/-/merge_requests/*
 // @match        https://tu-gitlab.com/*/-/issues/*
 // @match        https://tu-gitlab.com/*/-/merge_requests/*
 ```
 
-6. **Guarda** el script
+### URLs de Recursos
 
-## 📁 Estructura del proyecto
+El script carga estos recursos externos:
 
+```javascript
+// TM Framework
+// @require      https://raw.githubusercontent.com/user/tm-framework/main/dist/tm-framework.js
+
+// Servicios
+// @require      .../services/storage.js
+// @require      .../services/gitlab-api.js
+
+// Componentes
+// @require      .../components/LabelGroup.js
+// @require      .../components/LabelGroupsModal.js
+// @require      .../components/ConfigGroupItem.js
+// @require      .../components/LabelConfigModal.js
+// @require      .../components/LabelEditorApp.js
+
+// Estilos
+// @resource     LE_CSS .../styles/label-editor.css
 ```
-label-groups/
-├── css/
-│   └── style.css           # Estilos del popup
-├── html/
-│   ├── popup.html          # HTML del popup principal
-│   └── config-popup.html   # HTML del popup de configuración
-├── js/
-│   ├── fallback.js         # CSS/HTML de fallback
-│   ├── config.js           # Gestión de configuración
-│   ├── state.js            # Estado global de la aplicación
-│   ├── labels.js           # Lógica de selección de etiquetas
-│   ├── gitlab.js           # Interacción con GitLab
-│   └── ui.js               # Renderizado de popups
-├── main.user.js            # Script principal (entry point)
-└── README.md
-```
 
-## ⚙️ Configuración
+## Uso
 
-### Configuración por defecto
+### Seleccionar Etiquetas
 
-El script viene con grupos de ejemplo:
+1. Ve a un **issue** o **merge request** en GitLab
+2. En el sidebar, busca la sección **Labels**
+3. Haz clic en el botón **🏷️**
+4. **Clic** en una etiqueta para seleccionarla (verde)
+5. **Doble clic** en una etiqueta para eliminarla (rojo tachado)
+6. Revisa el preview de comandos
+7. Haz clic en **✅ Aplicar**
+
+### Configurar Grupos
+
+1. En el modal principal, haz clic en **⚙️**
+2. **Añadir grupo**: Clic en "➕ Añadir grupo"
+3. **Editar grupo**:
+   - Cambia el color con el selector
+   - Edita el nombre directamente
+   - Activa/desactiva "Exclusivo"
+4. **Añadir etiquetas**:
+   - Arrastra desde el panel derecho
+   - O haz clic en una etiqueta disponible
+5. **Eliminar etiqueta**: Clic en ✕
+6. **Eliminar grupo**: Clic en 🗑️
+7. Haz clic en **✅ Guardar**
+
+### Grupos Exclusivos vs No Exclusivos
+
+| Tipo | `exclusive` | Comportamiento |
+|------|-------------|----------------|
+| Exclusivo | `true` | Solo una etiqueta activa. Al seleccionar una, las otras se desmarcan |
+| No exclusivo | `false` | Múltiples etiquetas del mismo grupo pueden estar activas |
+
+## Configuración
+
+### Almacenamiento
+
+La configuración se guarda por proyecto usando `GM_setValue`:
+
+- **Clave**: `labelGroups_<nombre-proyecto>`
+- **Formato**: JSON con estructura de grupos
+
+### Formato de Configuración
 
 ```json
 {
-  "Área": {
-    "color": "#6366f1",
-    "exclusive": true,
-    "labels": ["conectores", "almacén", "ventas", "compras", "contabilidad"]
-  },
-  "Prioridad": {
-    "color": "#ef4444",
-    "exclusive": true,
-    "labels": ["crítico", "alto", "medio", "bajo"]
-  },
-  "Estado": {
-    "color": "#22c55e",
-    "exclusive": true,
-    "labels": ["pendiente", "en progreso", "en revisión", "bloqueado"]
-  },
-  "Tipo": {
-    "color": "#f59e0b",
-    "exclusive": true,
-    "labels": ["bug", "feature", "mejora", "documentación", "refactor"]
-  },
-  "Otro": {
-    "color": "#9ca3af",
-    "exclusive": false,
-    "labels": ["urgente", "requiere-review", "documentar", "tech-debt"]
-  }
+    "Prioridad": {
+        "color": "#ef4444",
+        "exclusive": true,
+        "labels": ["crítico", "alto", "medio", "bajo"]
+    },
+    "Estado": {
+        "color": "#22c55e",
+        "exclusive": true,
+        "labels": ["pendiente", "en progreso", "completado"]
+    },
+    "Tags": {
+        "color": "#9ca3af",
+        "exclusive": false,
+        "labels": ["urgente", "documentar", "tech-debt"]
+    }
 }
 ```
 
-### Personalizar grupos
+### Detección de Proyecto
 
-1. Abre cualquier issue o merge request en GitLab
-2. Haz clic en el botón 🏷️ junto a "Labels" en el sidebar
-3. Haz clic en el botón ⚙️ en la esquina superior derecha del popup
-4. Desde la interfaz puedes:
-   - **Añadir grupo**: Clic en "➕ Añadir grupo"
-   - **Eliminar grupo**: Clic en 🗑️
-   - **Cambiar color**: Clic en el selector de color
-   - **Renombrar grupo**: Edita el nombre directamente
-   - **Marcar como exclusivo/múltiple**: Activa o desactiva el checkbox
-   - **Añadir etiqueta**:
-     - Escribe en el campo y pulsa Enter, o
-     - Haz clic en una etiqueta del panel "Etiquetas del proyecto", o
-     - Arrastra una etiqueta del panel al grupo deseado
-   - **Eliminar etiqueta**: Clic en la ✕ de la etiqueta
-5. Haz clic en "✅ Guardar"
+El nombre del proyecto se extrae de la URL:
 
-### Etiquetas del proyecto
+```
+https://gitlab.com/grupo/proyecto/-/issues/123
+                      ^^^^^^^^
+                      proyecto
+```
 
-El panel "📋 Etiquetas del proyecto" muestra todas las etiquetas disponibles en el proyecto actual de GitLab:
+## Estilos CSS
 
-- Las etiquetas se cargan automáticamente desde la API de GitLab
-- Las etiquetas ya asignadas a un grupo aparecen atenuadas
-- Haz clic en 🔄 para recargar las etiquetas
-- Puedes arrastrar etiquetas directamente a los grupos
+### Nomenclatura BEM
 
-### Formato del JSON
+Todos los estilos usan el prefijo `le-` (Label Editor):
 
-```json
-{
-  "NombreDelGrupo": {
-    "color": "#hexcolor",
-    "exclusive": true,
-    "labels": ["etiqueta1", "etiqueta2", "etiqueta3"]
-  },
-  "GrupoMultiple": {
-    "color": "#9ca3af",
-    "exclusive": false,
-    "labels": ["tag1", "tag2", "tag3"]
-  }
+```css
+/* Bloques */
+.le-overlay
+.le-modal
+.le-group
+.le-label
+.le-btn
+
+/* Elementos */
+.le-modal__header
+.le-modal__content
+.le-group__items
+
+/* Modificadores */
+.le-label--selected
+.le-label--current
+.le-label--remove
+.le-btn--primary
+```
+
+### Variables CSS
+
+```css
+.label-editor {
+    --le-bg-primary: #fff;
+    --le-bg-secondary: #f5f5f5;
+    --le-text-primary: #1a1a1a;
+    --le-border: #d0d0d0;
+    --le-accent: #6366f1;
+    --le-success: #22a352;
+    --le-danger: #d93545;
+}
+
+.label-editor.dark-mode {
+    --le-bg-primary: #1f2937;
+    --le-bg-secondary: #374151;
+    --le-text-primary: #f3f4f6;
+    /* ... */
 }
 ```
 
-- **color**: Color del indicador del grupo (formato hexadecimal)
-- **exclusive**: `true` (por defecto) para selección única, `false` para selección múltiple
-- **labels**: Array con los nombres exactos de las etiquetas en GitLab
+## Debugging
 
-### Grupos exclusivos vs no exclusivos
+Activa el logger para debug:
 
-| Tipo         | `exclusive` | Comportamiento                                                                                             |
-| ------------ | ----------- | ---------------------------------------------------------------------------------------------------------- |
-| Exclusivo    | `true`      | Solo una etiqueta del grupo puede estar activa. Al seleccionar una, las otras se desmarcan automáticamente |
-| No exclusivo | `false`     | Puedes seleccionar múltiples etiquetas del mismo grupo                                                     |
+```javascript
+TM.Logger.configure({
+    enabled: true,
+    level: 'debug',
+    prefix: '[LabelEditor]'
+});
+```
 
-## 🎯 Uso
+Niveles disponibles: `debug`, `info`, `warn`, `error`
 
-1. Ve a cualquier **issue** o **merge request** en GitLab
-2. En el sidebar derecho, busca la sección "Labels"
-3. Haz clic en el botón **🏷️** que aparece junto al botón de editar
-4. **Clic** en una etiqueta para seleccionarla (se marca en verde)
-5. **Doble clic** en una etiqueta para marcarla para eliminar (se marca en rojo y tachada)
-6. Haz clic en **"✅ Aplicar"** para guardar los cambios
-
-> **Nota**: Las etiquetas del mismo grupo son mutuamente excluyentes. Al seleccionar una, las otras del mismo grupo se desmarcan automáticamente.
-
-## 🔧 Solución de problemas
+## Solución de Problemas
 
 ### El botón 🏷️ no aparece
 
-- Asegúrate de que el `@match` incluye el dominio de tu GitLab
-- Recarga la página después de instalar/actualizar el script
+- Verifica que `@match` incluye tu dominio GitLab
+- Recarga la página
 - Verifica que Tampermonkey está activo
+- Revisa la consola por errores de carga
 
 ### Las etiquetas no se aplican
 
-- GitLab debe tener las etiquetas creadas con los nombres exactos
-- Verifica en la consola del navegador (F12) si hay errores
+- Las etiquetas deben existir en GitLab con el nombre exacto
+- Verifica la consola del navegador (F12)
+- Activa el debug del Logger
 
-### El popup no se ve correctamente
+### El modal no se ve correctamente
 
-- Si los recursos externos no cargan, el script usa estilos de fallback
-- Verifica que las URLs de los `@resource` son correctas
+- Verifica que el CSS se cargó (`@resource LE_CSS`)
+- El script tiene fallback de estilos inline
 
-## 📝 Licencia
+### Error "TM Framework not loaded"
+
+- Verifica la URL del `@require` de tm-framework.js
+- El framework debe cargarse antes que los componentes
+
+## Changelog
+
+### v2.0.0 (2026-01-26)
+
+- **BREAKING**: Requiere TM Framework
+- Migración a arquitectura de componentes reactivos
+- 0 variables globales (antes 8)
+- 0 event listeners manuales (antes 28)
+- Nuevo sistema de estilos BEM
+- Integración con TM.Logger
+- Detección automática de tema
+
+### v1.0.0
+
+- Versión inicial
+- Arquitectura procedural con 8 archivos JS
+
+## Licencia
 
 MIT License
 
-## 👤 Autor
+## Autor
 
 **Jesús Lorenzo**
 
