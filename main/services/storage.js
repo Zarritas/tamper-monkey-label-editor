@@ -3,7 +3,7 @@
  * Wrapper for GM_* storage functions
  */
 
-(function() {
+const LabelEditorStorage = (function() {
     'use strict';
 
     const STORAGE_PREFIX = 'labelGroups_';
@@ -97,11 +97,7 @@
         return getProjectName();
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // EXPORT
-    // ═══════════════════════════════════════════════════════════════
-
-    const LabelEditorStorage = {
+    return {
         getKey,
         getDefaultGroups,
         loadGroups,
@@ -109,13 +105,4 @@
         getGroupForLabel,
         getCurrentProjectName
     };
-
-    // Register globally
-    globalThis.LabelEditorStorage = LabelEditorStorage;
-
-    // Also register in TM namespace if available
-    if (typeof TM !== 'undefined') {
-        TM.LabelEditorStorage = LabelEditorStorage;
-    }
-
 })();
