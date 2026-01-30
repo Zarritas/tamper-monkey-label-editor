@@ -3,7 +3,7 @@
  * Wrapper for GitLab API requests with caching
  */
 
-const GitLabAPI = (function() {
+(function() {
     'use strict';
 
     // Cache configuration
@@ -118,10 +118,23 @@ const GitLabAPI = (function() {
         return getProjectPath();
     }
 
-    return {
+    // ═══════════════════════════════════════════════════════════════
+    // EXPORT
+    // ═══════════════════════════════════════════════════════════════
+
+    const GitLabAPI = {
         getLabels,
         clearCache,
         getCurrentProjectPath,
         getBaseUrl
     };
+
+    // Register globally
+    globalThis.GitLabAPI = GitLabAPI;
+
+    // Also register in TM namespace if available
+    if (typeof TM !== 'undefined') {
+        TM.GitLabAPI = GitLabAPI;
+    }
+
 })();
