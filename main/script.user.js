@@ -16,17 +16,17 @@
 // @connect      gitlab.com
 // @connect      git.factorlibre.com
 // @connect      *
-// @resource     LE_CSS https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/styles/label-editor.css
-// @require      https://raw.githubusercontent.com/user/tm-framework/main/dist/tm-framework.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/services/storage.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/services/gitlab-api.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/components/LabelGroup.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/components/LabelGroupsModal.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/components/ConfigGroupItem.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/components/LabelConfigModal.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/components/LabelEditorApp.js
-// @updateURL    https://github.com/FlJesusLorenzo/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
-// @downloadURL  https://github.com/FlJesusLorenzo/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
+// @resource     LE_CSS https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/styles/label-editor.css
+// @require      https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-framework.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/services/storage.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/services/gitlab-api.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelGroup.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelGroupsModal.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/ConfigGroupItem.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelConfigModal.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelEditorApp.js
+// @updateURL    https://github.com/Zarritas/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
+// @downloadURL  https://github.com/Zarritas/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
 // ==/UserScript==
 
 (function() {
