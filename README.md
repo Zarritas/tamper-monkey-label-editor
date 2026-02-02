@@ -331,4 +331,4 @@ MIT License
 
 **Jesús Lorenzo**
 
-- GitHub: [@FlJesusLorenzo](https://github.com/FlJesusLorenzo)
+- GitHub: [@Zarritas](https://github.com/Zarritas)
