@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitLab Label Groups
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.1.0
 // @description  Gestiona etiquetas de GitLab agrupadas mediante quick actions
 // @author       Jesús Lorenzo
 // @match        https://gitlab.com/*/-/issues/*
@@ -16,18 +16,18 @@
 // @connect      gitlab.com
 // @connect      git.factorlibre.com
 // @connect      *
-// @resource     POPUP_CSS   https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/css/style.css
-// @resource     POPUP_HTML  https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/html/popup.html
-// @resource     CONFIG_HTML https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/html/config-popup.html
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/fallback.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/config.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/state.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/api.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/labels.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/gitlab.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/tamper-monkey-label-editor/main/main/js/ui.js
-// @updateURL    https://github.com/FlJesusLorenzo/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
-// @downloadURL  https://github.com/FlJesusLorenzo/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
+// @resource     POPUP_CSS   https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/css/style.css
+// @resource     POPUP_HTML  https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/html/popup.html
+// @resource     CONFIG_HTML https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/html/config-popup.html
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/js/fallback.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/js/config.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/js/state.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/js/api.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/js/labels.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/js/gitlab.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/js/ui.js
+// @updateURL    https://github.com/Zarritas/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
+// @downloadURL  https://github.com/Zarritas/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
 // ==/UserScript==
 
 (function () {
