@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitLab Label Groups
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
+// @version      2.0.1
 // @description  Gestiona etiquetas de GitLab agrupadas mediante quick actions (TM Framework)
 // @author       Jesús Lorenzo
 // @match        https://gitlab.com/*/-/issues/*
@@ -29,76 +29,76 @@
 // @downloadURL  https://github.com/Zarritas/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
 // ==/UserScript==
 
-(function() {
-    'use strict';
+(function () {
+  "use strict";
 
-    /**
-     * Load CSS styles
-     */
-    function loadStyles() {
-        // Load TM Framework styles (if available)
-        if (typeof TM !== 'undefined' && TM.injectStyles) {
-            TM.injectStyles();
-        }
-
-        // Load Label Editor styles
-        try {
-            const css = GM_getResourceText('LE_CSS');
-            if (css) {
-                GM_addStyle(css);
-            }
-        } catch (e) {
-            // Fallback: inject inline styles if resource fails
-            console.warn('[LabelEditor] Could not load CSS resource, using fallback');
-        }
+  /**
+   * Load CSS styles
+   */
+  function loadStyles() {
+    // Load TM Framework styles (if available)
+    if (typeof TM !== "undefined" && TM.injectStyles) {
+      TM.injectStyles();
     }
 
-    /**
-     * Initialize the Label Editor application
-     */
-    function init() {
-        const path = globalThis.location.pathname;
+    // Load Label Editor styles
+    try {
+      const css = GM_getResourceText("LE_CSS");
+      if (css) {
+        GM_addStyle(css);
+      }
+    } catch (e) {
+      // Fallback: inject inline styles if resource fails
+      console.warn("[LabelEditor] Could not load CSS resource, using fallback");
+    }
+  }
 
-        // Only run on issues and merge requests pages
-        if (!path.includes('/issues/') && !path.includes('/merge_requests/')) {
-            return;
-        }
+  /**
+   * Initialize the Label Editor application
+   */
+  function init() {
+    const path = globalThis.location.pathname;
 
-        // Load styles
-        loadStyles();
-
-        // Configure TM Logger (optional debugging)
-        if (typeof TM !== 'undefined' && TM.Logger) {
-            TM.Logger.configure({
-                enabled: false,  // Set to true for debugging
-                level: 'debug',
-                prefix: '[LabelEditor]'
-            });
-        }
-
-        // Create container for the app
-        const container = document.createElement('div');
-        container.id = 'label-editor-root';
-        document.body.appendChild(container);
-
-        // Initialize the LabelEditorApp component
-        if (typeof TM !== 'undefined' && typeof LabelEditorApp !== 'undefined') {
-            const app = new LabelEditorApp({
-                projectPath: null  // Will be auto-detected
-            });
-
-            app.mount(container);
-
-            TM.Logger.info('LabelEditor', 'Application initialized');
-        } else {
-            console.error('[LabelEditor] TM Framework or LabelEditorApp not loaded');
-        }
+    // Only run on issues and merge requests pages
+    if (!path.includes("/issues/") && !path.includes("/merge_requests/")) {
+      return;
     }
 
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+    // Load styles
+    loadStyles();
+
+    // Configure TM Logger (optional debugging)
+    if (typeof TM !== "undefined" && TM.Logger) {
+      TM.Logger.configure({
+        enabled: false, // Set to true for debugging
+        level: "debug",
+        prefix: "[LabelEditor]",
+      });
+    }
+
+    // Create container for the app
+    const container = document.createElement("div");
+    container.id = "label-editor-root";
+    document.body.appendChild(container);
+
+    // Initialize the LabelEditorApp component
+    if (typeof TM !== "undefined" && typeof LabelEditorApp !== "undefined") {
+      const app = new LabelEditorApp({
+        projectPath: null, // Will be auto-detected
+      });
+
+      app.mount(container);
+
+      TM.Logger.info("LabelEditor", "Application initialized");
     } else {
-        init();
+      console.error("[LabelEditor] TM Framework or LabelEditorApp not loaded");
     }
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
