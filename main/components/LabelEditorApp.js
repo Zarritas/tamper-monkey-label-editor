@@ -331,7 +331,7 @@
         // ═══════════════════════════════════════════════════════════
 
         render() {
-            const isDark = TM.theme?.isDark?.() ?? false;
+            const isDark = TM.theme?.isDark ?? false;
             const { showMainModal, showConfigModal, groups, selectedLabels, labelsToRemove, currentLabels, projectLabels, isLoading } = this.state;
 
             let modalHtml = '';
