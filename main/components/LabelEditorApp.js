@@ -1,0 +1,415 @@
+/**
+ * TM Label Editor - LabelEditorApp Component
+ * Main application component that manages state and renders modals
+ */
+
+(function() {
+    'use strict';
+
+    const { Component, html } = TM;
+
+    class LabelEditorApp extends Component {
+        static defaultProps = {
+            projectPath: null
+        };
+
+        initialState() {
+            return {
+                selectedLabels: new Set(),
+                labelsToRemove: new Set(),
+                currentLabels: new Set(),
+                groups: {},
+                projectLabels: [],
+                showMainModal: false,
+                showConfigModal: false,
+                isLoading: false,
+                error: null
+            };
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LIFECYCLE
+        // ═══════════════════════════════════════════════════════════
+
+        onMount() {
+            TM.Logger.info('LabelEditorApp', 'Mounted');
+            this._loadConfig();
+            this._injectSidebarButton();
+        }
+
+        onDestroy() {
+            this._removeSidebarButton();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // CONFIGURATION
+        // ═══════════════════════════════════════════════════════════
+
+        _loadConfig() {
+            const projectPath = this.props.projectPath || LabelEditorStorage.getCurrentProjectName();
+            this.state.groups = LabelEditorStorage.loadGroups(projectPath);
+            TM.Logger.debug('LabelEditorApp', 'Config loaded', { groups: Object.keys(this.state.groups) });
+        }
+
+        _saveConfig(groups) {
+            const projectPath = this.props.projectPath || LabelEditorStorage.getCurrentProjectName();
+            this.state.groups = groups;
+            LabelEditorStorage.saveGroups(projectPath, groups);
+            TM.Logger.debug('LabelEditorApp', 'Config saved');
+        }
+
+        async _loadProjectLabels() {
+            this.state.isLoading = true;
+            this.state.error = null;
+            try {
+                const labels = await GitLabAPI.getLabels();
+                this.state.projectLabels = labels;
+                TM.Logger.debug('LabelEditorApp', 'Labels loaded', { count: labels.length });
+            } catch (e) {
+                TM.Logger.error('LabelEditorApp', 'Failed to load labels', e);
+                this.state.error = 'Error cargando etiquetas';
+            } finally {
+                this.state.isLoading = false;
+            }
+        }
+
+        async _refreshProjectLabels() {
+            GitLabAPI.clearCache();
+            await this._loadProjectLabels();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // CURRENT LABELS (from GitLab sidebar)
+        // ═══════════════════════════════════════════════════════════
+
+        _loadCurrentLabels() {
+            const selectors = '[data-testid="sidebar-labels"] .gl-label-text, .issuable-show-labels .gl-label-text';
+            const labelElements = document.querySelectorAll(selectors);
+            this.state.currentLabels = new Set([...labelElements].map(el => el.textContent.trim()));
+            TM.Logger.debug('LabelEditorApp', 'Current labels loaded', { count: this.state.currentLabels.size });
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LABEL SELECTION LOGIC
+        // ═══════════════════════════════════════════════════════════
+
+        _toggleLabel(label, groupName) {
+            const group = this.state.groups[groupName];
+            if (!group) return;
+
+            if (this.state.selectedLabels.has(label)) {
+                const newSet = new Set(this.state.selectedLabels);
+                newSet.delete(label);
+                this.state.selectedLabels = newSet;
+            } else {
+                if (group.exclusive) {
+                    this._deselectOthersInGroup(groupName);
+                    this._markCurrentLabelsForRemoval(groupName);
+                }
+                this.state.selectedLabels = new Set([...this.state.selectedLabels, label]);
+            }
+        }
+
+        _toggleRemoveLabel(label) {
+            if (this.state.labelsToRemove.has(label)) {
+                const newSet = new Set(this.state.labelsToRemove);
+                newSet.delete(label);
+                this.state.labelsToRemove = newSet;
+            } else {
+                this.state.labelsToRemove = new Set([...this.state.labelsToRemove, label]);
+            }
+        }
+
+        _deselectOthersInGroup(groupName) {
+            const group = this.state.groups[groupName];
+            if (!group) return;
+            this.state.selectedLabels = new Set(
+                [...this.state.selectedLabels].filter(l => !group.labels.includes(l))
+            );
+        }
+
+        _markCurrentLabelsForRemoval(groupName) {
+            const group = this.state.groups[groupName];
+            if (!group) return;
+            const toRemove = group.labels.filter(l => this.state.currentLabels.has(l));
+            this.state.labelsToRemove = new Set([...this.state.labelsToRemove, ...toRemove]);
+        }
+
+        _clearSelections() {
+            this.state.selectedLabels = new Set();
+            this.state.labelsToRemove = new Set();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // COMMANDS GENERATION
+        // ═══════════════════════════════════════════════════════════
+
+        _getCommandsToApply() {
+            const toAdd = [...this.state.selectedLabels].filter(l => !this.state.currentLabels.has(l));
+            const toRemove = [...this.state.labelsToRemove].filter(l => this.state.currentLabels.has(l));
+            return { toAdd, toRemove };
+        }
+
+        _generateCommandString() {
+            const { toAdd, toRemove } = this._getCommandsToApply();
+            const commands = [];
+            if (toAdd.length > 0) commands.push(`/label ${toAdd.map(l => `~"${l}"`).join(' ')}`);
+            if (toRemove.length > 0) commands.push(`/unlabel ${toRemove.map(l => `~"${l}"`).join(' ')}`);
+            return commands.join('\n');
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // GITLAB INTEGRATION
+        // ═══════════════════════════════════════════════════════════
+
+        _findVisibleTextarea() {
+            const selectors = [
+                'textarea#note-body',
+                'textarea.note-textarea',
+                'textarea[data-testid="comment-field"]',
+                'textarea.js-note-text',
+                '#note_note'
+            ];
+            for (const selector of selectors) {
+                const el = document.querySelector(selector);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) return el;
+                }
+            }
+            return null;
+        }
+
+        _isRichTextMode() {
+            const switchBtn = document.querySelector('[data-testid="editing-mode-switcher"]');
+            return switchBtn?.textContent.toLowerCase().includes('plain text');
+        }
+
+        async _switchToPlainText() {
+            const switchBtn = document.querySelector('[data-testid="editing-mode-switcher"]');
+            if (switchBtn && this._isRichTextMode()) {
+                TM.Logger.debug('LabelEditorApp', 'Switching to plain text mode');
+                switchBtn.click();
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+
+        _switchToRichText() {
+            const switchBtn = document.querySelector('[data-testid="editing-mode-switcher"]');
+            if (switchBtn?.textContent.toLowerCase().includes('rich text')) {
+                TM.Logger.debug('LabelEditorApp', 'Switching back to rich text mode');
+                switchBtn.click();
+            }
+        }
+
+        async _applyChanges() {
+            const commands = this._generateCommandString();
+            if (!commands) {
+                this._closeMainModal();
+                return;
+            }
+
+            TM.Logger.debug('LabelEditorApp', 'Applying changes', { commands });
+
+            const textarea = this._findVisibleTextarea();
+            const savedContent = textarea?.value?.trim() || '';
+            const wasRichText = this._isRichTextMode();
+
+            await this._switchToPlainText();
+
+            const currentTextarea = this._findVisibleTextarea();
+            if (currentTextarea) {
+                currentTextarea.focus();
+                currentTextarea.value = commands;
+                currentTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                currentTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+
+                setTimeout(() => {
+                    const submitBtn = document.querySelector('.js-comment-submit-button button[type="submit"]');
+                    if (submitBtn) {
+                        if (submitBtn.disabled) {
+                            submitBtn.removeAttribute('disabled');
+                            submitBtn.classList.remove('disabled');
+                        }
+                        submitBtn.click();
+
+                        setTimeout(() => {
+                            if (savedContent) {
+                                const restoreTextarea = this._findVisibleTextarea();
+                                if (restoreTextarea) {
+                                    restoreTextarea.focus();
+                                    restoreTextarea.value = savedContent;
+                                    restoreTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                                }
+                            }
+                            if (wasRichText) setTimeout(() => this._switchToRichText(), 300);
+                        }, 500);
+                    }
+                }, 200);
+
+                currentTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                await navigator.clipboard.writeText(commands);
+                alert('Texto copiado al portapapeles:\n\n' + commands);
+            }
+
+            this._closeMainModal();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // MODAL MANAGEMENT
+        // ═══════════════════════════════════════════════════════════
+
+        _openMainModal() {
+            this._loadCurrentLabels();
+            this._clearSelections();
+            this.state.showMainModal = true;
+        }
+
+        _closeMainModal() {
+            this.state.showMainModal = false;
+        }
+
+        _openConfigModal() {
+            this._loadProjectLabels();
+            this.state.showConfigModal = true;
+            this.state.showMainModal = false;
+        }
+
+        _closeConfigModal() {
+            this.state.showConfigModal = false;
+        }
+
+        _handleConfigSave(groups) {
+            this._saveConfig(groups);
+            this._closeConfigModal();
+            this._openMainModal();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // SIDEBAR BUTTON
+        // ═══════════════════════════════════════════════════════════
+
+        _injectSidebarButton() {
+            this._observer = new MutationObserver(() => {
+                const labelsSection = document.querySelector('[data-testid="sidebar-labels"]');
+                if (!labelsSection) return;
+
+                const editButton = labelsSection.querySelector('[data-testid="edit-button"]');
+                if (!editButton) return;
+
+                if (labelsSection.querySelector('.le-sidebar-btn')) return;
+
+                const btn = document.createElement('button');
+                btn.className = 'le-sidebar-btn';
+                btn.innerHTML = 'G';
+                btn.title = 'Gestionar etiquetas por grupos';
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this._openMainModal();
+                });
+
+                editButton.parentElement.insertBefore(btn, editButton);
+                TM.Logger.debug('LabelEditorApp', 'Sidebar button injected');
+            });
+
+            this._observer.observe(document.body, { childList: true, subtree: true });
+        }
+
+        _removeSidebarButton() {
+            if (this._observer) {
+                this._observer.disconnect();
+                this._observer = null;
+            }
+            const btn = document.querySelector('.le-sidebar-btn');
+            if (btn) btn.remove();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // RENDER
+        // ═══════════════════════════════════════════════════════════
+
+        render() {
+            const isDark = TM.theme?.isDark?.() ?? false;
+            const { showMainModal, showConfigModal, groups, selectedLabels, labelsToRemove, currentLabels, projectLabels, isLoading } = this.state;
+
+            let modalHtml = '';
+
+            if (showMainModal) {
+                // Create LabelGroupsModal and mount it properly
+                const modalContainer = document.createElement('div');
+
+                const modal = new LabelGroupsModal({
+                    groups,
+                    selectedLabels,
+                    labelsToRemove,
+                    currentLabels,
+                    commands: this._getCommandsToApply(),
+                    onClose: () => this._closeMainModal(),
+                    onApply: () => this._applyChanges(),
+                    onOpenConfig: () => this._openConfigModal(),
+                    onLabelClick: (label, group) => this._toggleLabel(label, group),
+                    onLabelDoubleClick: (label) => this._toggleRemoveLabel(label)
+                });
+
+                // Mount the modal as a child component
+                this.removeChild('mainModal');
+                this.addChild('mainModal', modal);
+
+                // Use a placeholder that will be replaced
+                modalHtml = '<div ref="mainModalContainer"></div>';
+            }
+
+            if (showConfigModal) {
+                const modal = new LabelConfigModal({
+                    groups,
+                    projectLabels,
+                    isLoading,
+                    onClose: () => this._closeConfigModal(),
+                    onSave: (g) => this._handleConfigSave(g),
+                    onRefreshLabels: () => this._refreshProjectLabels()
+                });
+
+                this.removeChild('configModal');
+                this.addChild('configModal', modal);
+
+                modalHtml = '<div ref="configModalContainer"></div>';
+            }
+
+            return html`
+                <div class="label-editor ${isDark ? 'dark-mode' : ''}">
+                    ${modalHtml}
+                </div>
+            `;
+        }
+
+        onUpdate() {
+            // Mount child modals after render
+            if (this.state.showMainModal && this.refs.mainModalContainer) {
+                const modal = this.getChild('mainModal');
+                if (modal && !modal.isMounted) {
+                    modal.mount(this.refs.mainModalContainer);
+                }
+            }
+
+            if (this.state.showConfigModal && this.refs.configModalContainer) {
+                const modal = this.getChild('configModal');
+                if (modal && !modal.isMounted) {
+                    modal.mount(this.refs.configModalContainer);
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // EXPORT
+    // ═══════════════════════════════════════════════════════════════
+
+    globalThis.LabelEditorApp = LabelEditorApp;
+
+    if (typeof TM !== 'undefined') {
+        TM.LabelEditorApp = LabelEditorApp;
+    }
+
+})();
