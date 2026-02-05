@@ -21,8 +21,8 @@
 // @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/services/storage.js
 // @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/services/gitlab-api.js
 // @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelGroup.js
-// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelGroupsModal.js
 // @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/ConfigGroupItem.js
+// @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelGroupsModal.js
 // @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelConfigModal.js
 // @require      https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/main/main/components/LabelEditorApp.js
 // @updateURL    https://github.com/Zarritas/tamper-monkey-label-editor/raw/refs/heads/main/main/script.user.js
