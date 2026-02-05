@@ -37,7 +37,19 @@
 
         onMount() {
             TM.Logger.info('LabelEditorApp', 'Mounted');
-            this._loadConfig();
+
+            // Load config without triggering reactive updates
+            const projectPath = this.props.projectPath || LabelEditorStorage.getCurrentProjectName();
+            const groups = LabelEditorStorage.loadGroups(projectPath);
+
+            // Directly set the raw state to avoid update during mount
+            if (this.state.__raw) {
+                this.state.__raw.groups = groups;
+            } else {
+                this.state.groups = groups;
+            }
+
+            TM.Logger.debug('LabelEditorApp', 'Config loaded', { groups: Object.keys(groups) });
             this._injectSidebarButton();
         }
 
@@ -352,7 +364,8 @@
             const themeClass = isDark ? 'dark-mode' : '';
 
             // Always render a stable container - modals are mounted in onUpdate
-            return `<div class="label-editor ${themeClass}"></div>`;
+            // Use html template tag from framework
+            return html`<div class="label-editor ${themeClass}"></div>`;
         }
 
         onUpdate() {
