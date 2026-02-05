@@ -1,6 +1,9 @@
 /**
  * TM Label Editor - LabelEditorApp Component
  * Main application component that manages state and renders modals
+ *
+ * Note: Uses Arrays instead of Sets for state because TM Framework's
+ * Proxy-based reactivity doesn't work well with Set methods.
  */
 
 (function() {
@@ -15,9 +18,10 @@
 
         initialState() {
             return {
-                selectedLabels: new Set(),
-                labelsToRemove: new Set(),
-                currentLabels: new Set(),
+                // Using arrays instead of Sets (Proxy compatibility)
+                selectedLabels: [],
+                labelsToRemove: [],
+                currentLabels: [],
                 groups: {},
                 projectLabels: [],
                 showMainModal: false,
@@ -85,59 +89,71 @@
         _loadCurrentLabels() {
             const selectors = '[data-testid="sidebar-labels"] .gl-label-text, .issuable-show-labels .gl-label-text';
             const labelElements = document.querySelectorAll(selectors);
-            this.state.currentLabels = new Set([...labelElements].map(el => el.textContent.trim()));
-            TM.Logger.debug('LabelEditorApp', 'Current labels loaded', { count: this.state.currentLabels.size });
+            this.state.currentLabels = [...labelElements].map(el => el.textContent.trim());
+            TM.Logger.debug('LabelEditorApp', 'Current labels loaded', { count: this.state.currentLabels.length });
         }
 
         // ═══════════════════════════════════════════════════════════
-        // LABEL SELECTION LOGIC
+        // LABEL SELECTION LOGIC (using arrays)
         // ═══════════════════════════════════════════════════════════
 
         _toggleLabel(label, groupName) {
             const group = this.state.groups[groupName];
             if (!group) return;
 
-            if (this.state.selectedLabels.has(label)) {
-                const newSet = new Set(this.state.selectedLabels);
-                newSet.delete(label);
-                this.state.selectedLabels = newSet;
+            const selected = [...this.state.selectedLabels];
+            const idx = selected.indexOf(label);
+
+            if (idx >= 0) {
+                // Remove from selection
+                selected.splice(idx, 1);
+                this.state.selectedLabels = selected;
             } else {
+                // Add to selection
                 if (group.exclusive) {
                     this._deselectOthersInGroup(groupName);
                     this._markCurrentLabelsForRemoval(groupName);
                 }
-                this.state.selectedLabels = new Set([...this.state.selectedLabels, label]);
+                this.state.selectedLabels = [...this.state.selectedLabels, label];
             }
         }
 
         _toggleRemoveLabel(label) {
-            if (this.state.labelsToRemove.has(label)) {
-                const newSet = new Set(this.state.labelsToRemove);
-                newSet.delete(label);
-                this.state.labelsToRemove = newSet;
+            const toRemove = [...this.state.labelsToRemove];
+            const idx = toRemove.indexOf(label);
+
+            if (idx >= 0) {
+                toRemove.splice(idx, 1);
+                this.state.labelsToRemove = toRemove;
             } else {
-                this.state.labelsToRemove = new Set([...this.state.labelsToRemove, label]);
+                this.state.labelsToRemove = [...toRemove, label];
             }
         }
 
         _deselectOthersInGroup(groupName) {
             const group = this.state.groups[groupName];
             if (!group) return;
-            this.state.selectedLabels = new Set(
-                [...this.state.selectedLabels].filter(l => !group.labels.includes(l))
+            this.state.selectedLabels = this.state.selectedLabels.filter(
+                l => !group.labels.includes(l)
             );
         }
 
         _markCurrentLabelsForRemoval(groupName) {
             const group = this.state.groups[groupName];
             if (!group) return;
-            const toRemove = group.labels.filter(l => this.state.currentLabels.has(l));
-            this.state.labelsToRemove = new Set([...this.state.labelsToRemove, ...toRemove]);
+            const current = this.state.currentLabels;
+            const toRemove = group.labels.filter(l => current.includes(l));
+            // Add unique items
+            const existing = [...this.state.labelsToRemove];
+            toRemove.forEach(l => {
+                if (!existing.includes(l)) existing.push(l);
+            });
+            this.state.labelsToRemove = existing;
         }
 
         _clearSelections() {
-            this.state.selectedLabels = new Set();
-            this.state.labelsToRemove = new Set();
+            this.state.selectedLabels = [];
+            this.state.labelsToRemove = [];
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -145,8 +161,9 @@
         // ═══════════════════════════════════════════════════════════
 
         _getCommandsToApply() {
-            const toAdd = [...this.state.selectedLabels].filter(l => !this.state.currentLabels.has(l));
-            const toRemove = [...this.state.labelsToRemove].filter(l => this.state.currentLabels.has(l));
+            const current = this.state.currentLabels;
+            const toAdd = this.state.selectedLabels.filter(l => !current.includes(l));
+            const toRemove = this.state.labelsToRemove.filter(l => current.includes(l));
             return { toAdd, toRemove };
         }
 
@@ -337,14 +354,12 @@
             let modalHtml = '';
 
             if (showMainModal) {
-                // Create LabelGroupsModal and mount it properly
-                const modalContainer = document.createElement('div');
-
+                // Convert arrays to Sets for the modal (renderLabelGroup expects Sets)
                 const modal = new LabelGroupsModal({
                     groups,
-                    selectedLabels,
-                    labelsToRemove,
-                    currentLabels,
+                    selectedLabels: new Set(selectedLabels),
+                    labelsToRemove: new Set(labelsToRemove),
+                    currentLabels: new Set(currentLabels),
                     commands: this._getCommandsToApply(),
                     onClose: () => this._closeMainModal(),
                     onApply: () => this._applyChanges(),
@@ -353,11 +368,8 @@
                     onLabelDoubleClick: (label) => this._toggleRemoveLabel(label)
                 });
 
-                // Mount the modal as a child component
                 this.removeChild('mainModal');
                 this.addChild('mainModal', modal);
-
-                // Use a placeholder that will be replaced
                 modalHtml = '<div ref="mainModalContainer"></div>';
             }
 
@@ -373,7 +385,6 @@
 
                 this.removeChild('configModal');
                 this.addChild('configModal', modal);
-
                 modalHtml = '<div ref="configModalContainer"></div>';
             }
 
