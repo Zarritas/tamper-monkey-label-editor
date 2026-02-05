@@ -349,12 +349,36 @@
 
         render() {
             const isDark = TM.theme?.isDark ?? false;
+            const themeClass = isDark ? 'dark-mode' : '';
+
+            // Always render a stable container - modals are mounted in onUpdate
+            return `<div class="label-editor ${themeClass}"></div>`;
+        }
+
+        onUpdate() {
+            if (!this._el) return;
+
             const { showMainModal, showConfigModal, groups, selectedLabels, labelsToRemove, currentLabels, projectLabels, isLoading } = this.state;
 
-            let modalHtml = '';
+            // Clean up modals when closed
+            if (!showMainModal) {
+                const mainModal = this.getChild('mainModal');
+                if (mainModal) {
+                    mainModal.destroy();
+                    this.removeChild('mainModal');
+                }
+            }
 
-            if (showMainModal) {
-                // Convert arrays to Sets for the modal (renderLabelGroup expects Sets)
+            if (!showConfigModal) {
+                const configModal = this.getChild('configModal');
+                if (configModal) {
+                    configModal.destroy();
+                    this.removeChild('configModal');
+                }
+            }
+
+            // Mount main modal if needed
+            if (showMainModal && !this.getChild('mainModal')) {
                 const modal = new LabelGroupsModal({
                     groups,
                     selectedLabels: new Set(selectedLabels),
@@ -368,12 +392,12 @@
                     onLabelDoubleClick: (label) => this._toggleRemoveLabel(label)
                 });
 
-                this.removeChild('mainModal');
                 this.addChild('mainModal', modal);
-                modalHtml = '<div ref="mainModalContainer"></div>';
+                modal.mount(this._el);
             }
 
-            if (showConfigModal) {
+            // Mount config modal if needed
+            if (showConfigModal && !this.getChild('configModal')) {
                 const modal = new LabelConfigModal({
                     groups,
                     projectLabels,
@@ -383,32 +407,8 @@
                     onRefreshLabels: () => this._refreshProjectLabels()
                 });
 
-                this.removeChild('configModal');
                 this.addChild('configModal', modal);
-                modalHtml = '<div ref="configModalContainer"></div>';
-            }
-
-            return html`
-                <div class="label-editor ${isDark ? 'dark-mode' : ''}">
-                    ${modalHtml}
-                </div>
-            `;
-        }
-
-        onUpdate() {
-            // Mount child modals after render
-            if (this.state.showMainModal && this.refs.mainModalContainer) {
-                const modal = this.getChild('mainModal');
-                if (modal && !modal.isMounted) {
-                    modal.mount(this.refs.mainModalContainer);
-                }
-            }
-
-            if (this.state.showConfigModal && this.refs.configModalContainer) {
-                const modal = this.getChild('configModal');
-                if (modal && !modal.isMounted) {
-                    modal.mount(this.refs.configModalContainer);
-                }
+                modal.mount(this._el);
             }
         }
     }
