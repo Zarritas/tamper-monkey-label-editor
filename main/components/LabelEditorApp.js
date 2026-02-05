@@ -37,19 +37,7 @@
 
         onMount() {
             TM.Logger.info('LabelEditorApp', 'Mounted');
-
-            // Load config without triggering reactive updates
-            const projectPath = this.props.projectPath || LabelEditorStorage.getCurrentProjectName();
-            const groups = LabelEditorStorage.loadGroups(projectPath);
-
-            // Directly set the raw state to avoid update during mount
-            if (this.state.__raw) {
-                this.state.__raw.groups = groups;
-            } else {
-                this.state.groups = groups;
-            }
-
-            TM.Logger.debug('LabelEditorApp', 'Config loaded', { groups: Object.keys(groups) });
+            this._loadConfig();
             this._injectSidebarButton();
         }
 
