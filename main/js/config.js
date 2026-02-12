@@ -6,7 +6,6 @@
 const LabelConfig = (function() {
     'use strict';
 
-    // Default label groups
     const DEFAULT_GROUPS = {
         "Área": {
             color: "#6366f1",
@@ -35,98 +34,73 @@ const LabelConfig = (function() {
         }
     };
 
-    // Cache for project labels from API
     let projectLabelsCache = null;
     let projectLabelsCacheTime = 0;
-    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+    const CACHE_TTL = 5 * 60 * 1000;
 
-    /**
-     * Get current project name from URL
-     */
     function getProjectName() {
-        const ctx = TM.gitlab.getContext();
+        const ctx = GitLabHelper.getContext();
         return ctx.project || 'default';
     }
 
-    /**
-     * Get storage key for current project
-     */
     function getStorageKey() {
         return `labelGroups_${getProjectName()}`;
     }
 
-    /**
-     * Get label groups for current project
-     */
     function getGroups() {
         const key = getStorageKey();
-        const stored = TM.storage.get(key);
-        
+        const stored = StorageHelper.get(key);
+
         if (stored && typeof stored === 'object') {
-            return TM.deepClone(stored);
+            return Utils.deepClone(stored);
         }
-        
-        return TM.deepClone(DEFAULT_GROUPS);
+
+        return Utils.deepClone(DEFAULT_GROUPS);
     }
 
-    /**
-     * Save label groups for current project
-     */
     function saveGroups(groups) {
         const key = getStorageKey();
-        TM.storage.set(key, groups);
+        StorageHelper.set(key, groups);
     }
 
-    /**
-     * Reset to default groups
-     */
     function resetGroups() {
         const key = getStorageKey();
-        TM.storage.remove(key);
-        return TM.deepClone(DEFAULT_GROUPS);
+        StorageHelper.remove(key);
+        return Utils.deepClone(DEFAULT_GROUPS);
     }
 
-    /**
-     * Get all labels from all groups (flat list)
-     */
-    function getAllConfiguredLabels(groups = null) {
+    function getAllConfiguredLabels(groups) {
         groups = groups || getGroups();
         const labels = new Set();
-        
+
         Object.values(groups).forEach(group => {
             group.labels.forEach(label => labels.add(label));
         });
-        
+
         return Array.from(labels);
     }
 
-    /**
-     * Find which group a label belongs to
-     */
-    function findLabelGroup(labelName, groups = null) {
+    function findLabelGroup(labelName, groups) {
         groups = groups || getGroups();
-        
+
         for (const [groupName, group] of Object.entries(groups)) {
             if (group.labels.includes(labelName)) {
                 return { groupName, group };
             }
         }
-        
+
         return null;
     }
 
-    /**
-     * Fetch labels from GitLab API (with caching)
-     */
     async function fetchProjectLabels(forceRefresh = false) {
         const now = Date.now();
-        
+
         if (!forceRefresh && projectLabelsCache && (now - projectLabelsCacheTime) < CACHE_TTL) {
             return projectLabelsCache;
         }
-        
+
         try {
-            const labels = await TM.gitlab.getLabels();
+            const labels = await GitLabHelper.getLabels();
             projectLabelsCache = labels.map(l => ({
                 name: l.name,
                 color: l.color,
@@ -140,51 +114,38 @@ const LabelConfig = (function() {
         }
     }
 
-    /**
-     * Clear labels cache
-     */
     function clearLabelsCache() {
         projectLabelsCache = null;
         projectLabelsCacheTime = 0;
     }
 
-    /**
-     * Get current labels on the issue/MR
-     */
     function getCurrentLabels() {
-        const labels = TM.gitlab.getCurrentLabels();
+        const labels = GitLabHelper.getCurrentLabels();
         return (labels ?? []).map(l => l.name);
     }
 
-    /**
-     * Export config as JSON string
-     */
     function exportConfig() {
         return JSON.stringify(getGroups(), null, 2);
     }
 
-    /**
-     * Import config from JSON string
-     */
     function importConfig(jsonString) {
         try {
             const groups = JSON.parse(jsonString);
-            
-            // Validate structure
+
             if (typeof groups !== 'object' || groups === null) {
                 throw new Error('Debe ser un objeto JSON');
             }
-            
+
             for (const [name, group] of Object.entries(groups)) {
                 if (!group.color || !Array.isArray(group.labels)) {
                     throw new Error(`Grupo "${name}" inválido`);
                 }
-                
+
                 if (typeof group.exclusive !== 'boolean') {
                     throw new Error(`Grupo "${name}" inválido: la propiedad "exclusive" debe ser booleana`);
                 }
             }
-            
+
             saveGroups(groups);
             return { success: true, groups };
         } catch (error) {
@@ -208,5 +169,4 @@ const LabelConfig = (function() {
     };
 })();
 
-// Make available globally
 window.LabelConfig = LabelConfig;

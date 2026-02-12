@@ -3,7 +3,7 @@
  * A group of labels with mutual exclusivity support
  */
 
-class LabelGroup extends TM.Component {
+class LabelGroup {
     static defaultProps = {
         name: '',
         color: '#6366f1',
@@ -13,90 +13,92 @@ class LabelGroup extends TM.Component {
         onChange: null
     };
 
-    initialState() {
-        return {
-            labelStates: this.initLabelStates()
+    constructor(props = {}) {
+        this.props = { ...LabelGroup.defaultProps, ...props };
+        this.state = {
+            labelStates: this._initLabelStates()
         };
+        this.el = null;
+        this._chips = [];
+        this._changeTimeout = null;
     }
 
-    initLabelStates() {
+    _initLabelStates() {
         const states = {};
         const { labels, currentLabels } = this.props;
-        
+
         labels.forEach(label => {
             states[label] = {
                 selected: currentLabels.includes(label),
                 toRemove: false
             };
         });
-        
+
         return states;
     }
 
     render() {
         const { name, color, exclusive, labels } = this.props;
-        const { labelStates } = this.state;
 
-        return TM.html`
-            <div class="label-group">
-                <div class="label-group__header">
-                    <span class="label-group__indicator" style="background-color: ${color};"></span>
-                    <span class="label-group__name">${name}</span>
-                    ${exclusive ? '<span class="label-group__badge">exclusivo</span>' : ''}
-                </div>
-                <div class="label-group__labels" ref="labelsContainer">
-                    ${labels.map(labelName => `
-                        <span 
-                            class="label-chip-placeholder" 
-                            data-label="${labelName}"
-                        ></span>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
+        const div = document.createElement('div');
+        div.className = 'label-group';
 
-    onMount() {
-        this.renderLabelChips();
-    }
+        // Header
+        const header = document.createElement('div');
+        header.className = 'label-group__header';
 
-    onUpdate() {
-        this.renderLabelChips();
-    }
+        const indicator = document.createElement('span');
+        indicator.className = 'label-group__indicator';
+        indicator.style.backgroundColor = color;
+        header.appendChild(indicator);
 
-    renderLabelChips() {
-        const { labels, color } = this.props;
-        const { labelStates } = this.state;
-        
-        if (this._chips) {
-            this._chips.forEach(chip => chip.destroy());
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'label-group__name';
+        nameSpan.textContent = name;
+        header.appendChild(nameSpan);
+
+        if (exclusive) {
+            const badge = document.createElement('span');
+            badge.className = 'label-group__badge';
+            badge.textContent = 'exclusivo';
+            header.appendChild(badge);
         }
-        this._chips = [];
+
+        div.appendChild(header);
+
+        // Labels container
+        const labelsContainer = document.createElement('div');
+        labelsContainer.className = 'label-group__labels';
 
         labels.forEach(labelName => {
-            const placeholder = this._el.querySelector(`[data-label="${labelName}"]`);
-            if (!placeholder) return;
-            
-            const state = labelStates[labelName] || { selected: false, toRemove: false };
-            
+            const state = this.state.labelStates[labelName] || { selected: false, toRemove: false };
+
             const chip = new LabelChip({
                 name: labelName,
                 color: color,
                 selected: state.selected,
                 toRemove: state.toRemove,
-                onClick: (name, newState) => this.handleLabelChange(name, newState),
-                onDoubleClick: (name, newState) => this.handleLabelChange(name, newState)
+                onClick: (n, newState) => this._handleLabelChange(n, newState),
+                onDoubleClick: (n, newState) => this._handleLabelChange(n, newState)
             });
-            
-            chip.replace(placeholder);
+
+            chip.mount(labelsContainer);
             this._chips.push(chip);
-            this.addChild(labelName, chip);
         });
+
+        div.appendChild(labelsContainer);
+        this.el = div;
+        return div;
     }
 
-    handleLabelChange(labelName, newState) {
+    mount(container) {
+        if (!this.el) this.render();
+        container.appendChild(this.el);
+    }
+
+    _handleLabelChange(labelName, newState) {
         const { exclusive } = this.props;
-        
+
         if (exclusive && newState.selected && !newState.toRemove) {
             this._chips.forEach(chip => {
                 if (chip.getName() !== labelName && chip.isSelected()) {
@@ -105,39 +107,33 @@ class LabelGroup extends TM.Component {
                 }
             });
         }
-        
+
         this.state.labelStates[labelName] = newState;
-        
-        this.notifyChange();
+        this._notifyChange();
     }
 
-    notifyChange() {
-        // Debounce change notifications to prevent excessive updates
+    _notifyChange() {
         if (this._changeTimeout) {
             clearTimeout(this._changeTimeout);
         }
-        
+
         this._changeTimeout = setTimeout(() => {
             const changes = this.getChanges();
             this.props.onChange?.(this.props.name, changes);
-            this.emit('change', { groupName: this.props.name, changes });
             this._changeTimeout = null;
-        }, 50); // Debounce rapid changes
+        }, 50);
     }
 
-    /**
-     * Get labels to add and remove
-     */
     getChanges() {
         const { currentLabels } = this.props;
         const { labelStates } = this.state;
-        
+
         const toAdd = [];
         const toRemove = [];
-        
+
         Object.entries(labelStates).forEach(([label, state]) => {
             const wasActive = currentLabels.includes(label);
-            
+
             if (state.selected && !wasActive) {
                 toAdd.push(label);
             } else if (state.toRemove && wasActive) {
@@ -146,18 +142,15 @@ class LabelGroup extends TM.Component {
                 toRemove.push(label);
             }
         });
-        
+
         return { toAdd, toRemove };
     }
 
-    /**
-     * Reset all labels to initial state
-     */
     reset() {
-        this.state.labelStates = this.initLabelStates();
-        this._chips?.forEach(chip => {
+        this.state.labelStates = this._initLabelStates();
+        this._chips.forEach(chip => {
             const state = this.state.labelStates[chip.getName()];
-            if (state.selected) {
+            if (state?.selected) {
                 chip.setSelected(true);
             } else {
                 chip.reset();
@@ -165,12 +158,15 @@ class LabelGroup extends TM.Component {
         });
     }
 
-    onDestroy() {
+    destroy() {
         if (this._changeTimeout) {
             clearTimeout(this._changeTimeout);
             this._changeTimeout = null;
         }
-        this._chips?.forEach(chip => chip.destroy());
+        this._chips.forEach(chip => chip.destroy());
+        this._chips = [];
+        this.el?.remove();
+        this.el = null;
     }
 }
 

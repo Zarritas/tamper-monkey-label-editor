@@ -2,8 +2,8 @@
 
 Script de Tampermonkey para gestionar etiquetas de GitLab organizadas en grupos mutuamente excluyentes.
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
-![TM Framework](https://img.shields.io/badge/requires-TM%20Framework-purple)
+![Version](https://img.shields.io/badge/version-2.1.0-blue)
+![Vanilla JS](https://img.shields.io/badge/vanilla-JS-yellow)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## ✨ Características
@@ -17,26 +17,30 @@ Script de Tampermonkey para gestionar etiquetas de GitLab organizadas en grupos 
 - **Etiquetas del proyecto**: Carga automáticamente las etiquetas disponibles desde la API de GitLab
 - **Modo oscuro/claro**: Detecta automáticamente el tema de GitLab
 - **Quick Actions**: Utiliza los comandos nativos `/label` y `/unlabel` de GitLab
-- **Almacenamiento optimizado**: Usa GM_setValue/GM_getValue para persistencia segura
-- **API robusta**: Peticiones con GM_xmlhttpRequest y mejor manejo de errores
-- **Sin stack overflow**: Sistema de eventos protegido contra recursión infinita
+- **Sin dependencias externas**: Vanilla JS puro, sin frameworks
+- **Almacenamiento persistente**: Usa GM_setValue/GM_getValue para persistencia segura
 
 ## 📁 Estructura del Proyecto
 
 ```text
-label-editor/
+tamper-monkey-label-editor/
 ├── main/
 │   ├── css/
-│   │   └── style.css           # Estilos específicos del editor
-│   ├── script.user.js          # Entry point (instalar en Tampermonkey)
+│   │   └── style.css              # Estilos completos (variables, modal, toast, componentes)
+│   ├── script.user.js             # Entry point (instalar en Tampermonkey)
 │   └── js/
-│       ├── config.js            # Gestión de configuración y storage
-│       ├── app.js               # Clase principal LabelGroupsApp
+│       ├── utils.js               # Utilidades (deepClone, classNames, waitForElement, debounce)
+│       ├── storage.js             # Wrapper de GM_getValue/setValue/deleteValue
+│       ├── gitlab-helpers.js      # Helpers de GitLab (API, DOM, quick actions)
+│       ├── toast.js               # Sistema de notificaciones toast
+│       ├── modal.js               # Modal simple (SimpleModal)
+│       ├── config.js              # Gestión de configuración y storage
+│       ├── app.js                 # Clase principal LabelGroupsApp
 │       └── components/
-│           ├── LabelChip.js     # Etiqueta individual con estados
-│           ├── LabelGroup.js    # Grupo de etiquetas con exclusividad
-│           ├── LabelPopup.js    # Popup principal de selección
-│           └── ConfigPopup.js   # Popup de configuración
+│           ├── LabelChip.js       # Etiqueta individual con estados
+│           ├── LabelGroup.js      # Grupo de etiquetas con exclusividad
+│           ├── LabelPopup.js      # Popup principal de selección
+│           └── ConfigPopup.js     # Popup de configuración
 └── README.md
 ```
 
@@ -45,61 +49,15 @@ label-editor/
 ### Requisitos previos
 
 1. Navegador con [Tampermonkey](https://www.tampermonkey.net/) instalado
-2. [TM Framework](https://github.com/Zarritas/tm-framework) (se carga automáticamente via @require)
 
 ### Pasos
 
 1. **Crea un nuevo script** en Tampermonkey
 
-2. **Copia el contenido** de `script.user.js`:
+2. **Copia el contenido** de `script.user.js`, ajustando las URLs de `@require` según tu entorno:
 
-```javascript
-// ==UserScript==
-// @name         GitLab Label Groups
-// @namespace    http://tampermonkey.net/
-// @version      2.0.0
-// @description  Gestiona etiquetas de GitLab en grupos mutuamente excluyentes
-// @author       Jesús Lorenzo
-// @match        https://gitlab.com/*/-/issues/*
-// @match        https://gitlab.com/*/-/merge_requests/*
-// @match        https://git.factorlibre.com/*/-/issues/*
-// @match        https://git.factorlibre.com/*/-/merge_requests/*
-// @require      https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-framework.js
-// @require      https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-gitlab.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/js/config.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/js/components/LabelChip.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/js/components/LabelGroup.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/js/components/LabelPopup.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/js/components/ConfigPopup.js
-// @require      https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/js/app.js
-// @resource     TM_CSS https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-styles.css
-// @resource     APP_CSS https://raw.githubusercontent.com/FlJesusLorenzo/label-editor/main/css/style.css
-// @grant        GM_addStyle
-// @grant        GM_getResourceText
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_deleteValue
-// @grant        GM_listValues
-// @grant        GM_xmlhttpRequest
-// ==/UserScript==
-
-(function() {
-    'use strict';
-
-    // Inyectar estilos
-    GM_addStyle(GM_getResourceText('TM_CSS'));
-    GM_addStyle(GM_getResourceText('APP_CSS'));
-
-    // Inicializar
-    if (TM.gitlab.isGitLab()) {
-        TM.gitlab.waitForSidebar().then(() => {
-            new LabelGroupsApp().init();
-        }).catch(err => {
-            console.warn('[Label Groups] Sidebar not found:', err);
-        });
-    }
-})();
-```
+   - **Desarrollo local**: usa rutas `file:///` apuntando a tus archivos locales
+   - **Producción**: usa URLs raw de GitHub apuntando a tu repositorio
 
 3. **Añade tus dominios** de GitLab en los `@match` si usas una instancia propia
 
@@ -151,38 +109,6 @@ Los cambios se sincronizan automáticamente entre ambos modos.
 - **Añadir etiqueta**: Escribe en el campo y pulsa Enter, o haz clic en una etiqueta del panel "Etiquetas del proyecto"
 - **Eliminar etiqueta**: Clic en la ✕ de la etiqueta
 
-### Configuración por defecto
-
-```json
-{
-    "Área": {
-        "color": "#6366f1",
-        "exclusive": true,
-        "labels": ["conectores", "almacén", "ventas", "compras", "contabilidad"]
-    },
-    "Prioridad": {
-        "color": "#ef4444",
-        "exclusive": true,
-        "labels": ["crítico", "alto", "medio", "bajo"]
-    },
-    "Estado": {
-        "color": "#22c55e",
-        "exclusive": true,
-        "labels": ["pendiente", "en progreso", "en revisión", "bloqueado"]
-    },
-    "Tipo": {
-        "color": "#f59e0b",
-        "exclusive": true,
-        "labels": ["bug", "feature", "mejora", "documentación", "refactor"]
-    },
-    "Otro": {
-        "color": "#9ca3af",
-        "exclusive": false,
-        "labels": ["urgente", "requiere-review", "documentar", "tech-debt"]
-    }
-}
-```
-
 ### Formato del JSON
 
 ```json
@@ -206,27 +132,37 @@ Los cambios se sincronizan automáticamente entre ambos modos.
 La configuración se guarda **por proyecto**:
 
 - El nombre del proyecto se extrae de la URL (ej: `fl-v16` de `.../odoo-16/fl-v16/-/issues/123`)
-- Se almacena con GM_setValue/GM_getValue usando la clave `labelGroups_<nombre-proyecto>` (con fallback a localStorage)
+- Se almacena con la clave `labelGroups_<nombre-proyecto>`
 - Los proyectos nuevos usan la configuración por defecto hasta que la personalices
 
 ## 🧩 Componentes
 
-El editor está construido con [TM Framework](https://github.com/Zarritas/tm-framework) usando componentes reactivos:
+El editor está construido con clases vanilla JS independientes:
 
 | Componente | Descripción |
 |------------|-------------|
 | `LabelChip` | Etiqueta individual con estados (normal, selected, toRemove) |
-| `LabelGroup` | Grupo de etiquetas con lógica de exclusividad |
+| `LabelGroup` | Grupo de etiquetas con lógica de exclusividad y debounce |
 | `LabelPopup` | Popup principal de selección de etiquetas |
 | `ConfigPopup` | Popup de configuración con editor visual y JSON |
 | `LabelGroupsApp` | Orquestador principal que gestiona los modales |
+
+### Módulos de soporte
+
+| Módulo | Descripción |
+|--------|-------------|
+| `Utils` | deepClone, classNames, escapeHtml, waitForElement, debounce |
+| `StorageHelper` | Wrapper de GM_getValue/setValue/deleteValue |
+| `GitLabHelper` | API de GitLab, detección de contexto, quick actions |
+| `Toast` | Notificaciones flotantes (success, error, warning, info) |
+| `SimpleModal` | Modal con overlay, cierre por ESC/overlay, setContent |
 
 ### Arquitectura
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      LabelGroupsApp                         │
-│  - Crea Modal                                               │
+│  - Crea SimpleModal                                         │
 │  - Añade botón trigger al sidebar                           │
 │  - Orquesta LabelPopup y ConfigPopup                        │
 └─────────────────────────────────────────────────────────────┘
@@ -239,20 +175,20 @@ El editor está construido con [TM Framework](https://github.com/Zarritas/tm-fra
 │  - Selección labels  │         │  - Editor JSON       │
 │  - Aplica cambios    │         │  - Labels del proyecto│
 └──────────────────────┘         └──────────────────────┘
-              │                               
-              ▼                               
-┌──────────────────────┐                      
-│     LabelGroup       │                      
-│  - Contiene N chips  │                      
-│  - Gestiona exclusiv.│                      
-└──────────────────────┘                      
-              │                               
-              ▼                               
-┌──────────────────────┐                      
-│     LabelChip        │                      
-│  - Click: seleccionar│                      
-│  - DblClick: eliminar│                      
-└──────────────────────┘                      
+              │
+              ▼
+┌──────────────────────┐
+│     LabelGroup       │
+│  - Contiene N chips  │
+│  - Gestiona exclusiv.│
+└──────────────────────┘
+              │
+              ▼
+┌──────────────────────┐
+│     LabelChip        │
+│  - Click: seleccionar│
+│  - DblClick: eliminar│
+└──────────────────────┘
 ```
 
 ## 🔧 Desarrollo
@@ -264,20 +200,13 @@ El editor está construido con [TM Framework](https://github.com/Zarritas/tm-fra
 3. En Tampermonkey, cambia los `@require` para apuntar a tus archivos locales:
 
 ```javascript
-// @require      file:///ruta/a/tu/proyecto/main/js/config.js
-// @require      file:///ruta/a/tu/proyecto/main/js/components/LabelChip.js
+// @require      file:///ruta/a/tu/proyecto/main/js/utils.js
+// @require      file:///ruta/a/tu/proyecto/main/js/storage.js
+// @require      file:///ruta/a/tu/proyecto/main/js/gitlab-helpers.js
 // ...
 ```
 
 > **Nota**: Necesitas habilitar el acceso a archivos locales en la configuración de Tampermonkey.
-
-### Dependencias
-
-Este proyecto depende de [TM Framework](https://github.com/Zarritas/tm-framework):
-
-- `tm-framework.js` - Core del framework (componentes, estado reactivo, utilidades)
-- `tm-gitlab.js` - Plugin con helpers específicos para GitLab
-- `tm-styles.css` - Estilos base y variables CSS
 
 ## 🐛 Solución de problemas
 
@@ -296,9 +225,9 @@ Este proyecto depende de [TM Framework](https://github.com/Zarritas/tm-framework
 
 ### El tema no se detecta correctamente
 
-- El framework detecta el tema de GitLab automáticamente
-- Si usas una versión antigua de GitLab, puede que no funcione
-- Puedes forzar el tema añadiendo `TM.theme.setMode('dark')` o `'light'`
+- El script detecta el tema de GitLab automáticamente via clases CSS y atributos `data-gitlab-theme-id`
+- Soporta: `.gl-dark`, `[data-theme="dark"]`, y temas oscuros de GitLab (IDs 6-11)
+- También respeta `prefers-color-scheme: dark` del sistema
 
 ## 📝 Licencia
 
@@ -306,5 +235,4 @@ MIT © Jesús Lorenzo
 
 ## 🔗 Enlaces
 
-- [TM Framework](https://github.com/Zarritas/tm-framework) - Framework base
 - [Tampermonkey](https://www.tampermonkey.net/) - Gestor de userscripts
