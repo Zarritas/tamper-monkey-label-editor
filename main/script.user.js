@@ -31,17 +31,19 @@
 // @downloadURL  https://raw.githubusercontent.com/Zarritas/tamper-monkey-label-editor/refs/heads/main/main/script.user.js
 // ==/UserScript==
 
-(function() {
-    'use strict';
+(function () {
+  "use strict";
 
-    GM_addStyle(GM_getResourceText('APP_CSS'));
+  GM_addStyle(GM_getResourceText("APP_CSS"));
 
-    if (GitLabHelper.isGitLab()) {
-        GitLabHelper.waitForSidebar().then(() => {
-            const app = new LabelGroupsApp();
-            app.init();
-        }).catch(err => {
-            console.warn('[Label Groups] Sidebar not found:', err);
-        });
-    }
+  if (GitLabHelper.isGitLab()) {
+    GitLabHelper.waitForSidebar()
+      .then(() => {
+        const app = new LabelGroupsApp();
+        app.init();
+      })
+      .catch((err) => {
+        console.warn("[Label Groups] Sidebar not found:", err);
+      });
+  }
 })();
