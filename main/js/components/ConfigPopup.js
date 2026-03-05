@@ -561,29 +561,48 @@ class ConfigPopup {
         this._refs.importInput?.click();
     }
 
-    _handleImportFile(e) {
+    async _handleImportFile(e) {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const parsed = JSON.parse(event.target.result);
-                if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-                    throw new Error('El archivo debe contener un objeto JSON');
-                }
-                this.state.groups = parsed;
-                this._renderVisualGroups();
-                if (this._refs.jsonEditor) {
-                    this._refs.jsonEditor.value = this._getJsonContent();
-                }
-                this._renderProjectLabels();
-                Toast.success('Configuración importada');
-            } catch (err) {
-                Toast.error(`Error al importar: ${err.message}`);
+        try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+                throw new Error('El archivo debe contener un objeto JSON');
             }
-        };
-        reader.readAsText(file);
+
+            // Obtener etiquetas del proyecto para validar
+            const projectLabels = await LabelConfig.fetchProjectLabels();
+            const validNames = new Set(projectLabels.map(l => l.name));
+
+            const filtered = {};
+            const removed = [];
+
+            for (const [groupName, group] of Object.entries(parsed)) {
+                const validLabels = (group.labels || []).filter(label => {
+                    if (validNames.has(label)) return true;
+                    removed.push(label);
+                    return false;
+                });
+                filtered[groupName] = { ...group, labels: validLabels };
+            }
+
+            this.state.groups = filtered;
+            this._renderVisualGroups();
+            if (this._refs.jsonEditor) {
+                this._refs.jsonEditor.value = this._getJsonContent();
+            }
+            this._renderProjectLabels();
+
+            if (removed.length > 0) {
+                Toast.warning(`Importado. Se eliminaron ${removed.length} etiquetas inexistentes: ${removed.join(', ')}`);
+            } else {
+                Toast.success('Configuración importada');
+            }
+        } catch (err) {
+            Toast.error(`Error al importar: ${err.message}`);
+        }
         // Reset para permitir reimportar el mismo archivo
         e.target.value = '';
     }
