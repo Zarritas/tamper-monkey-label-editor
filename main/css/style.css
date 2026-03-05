@@ -721,6 +721,52 @@ body[data-gitlab-theme-id="6"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   AUTOCOMPLETE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.config-autocomplete-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.config-autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 100;
+    min-width: 220px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--lg-bg);
+    border: 1px solid var(--lg-border);
+    border-radius: var(--lg-radius);
+    box-shadow: var(--lg-shadow-lg);
+    margin-top: 2px;
+}
+
+.config-autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--lg-text);
+}
+
+.config-autocomplete-item:hover,
+.config-autocomplete-item--active {
+    background: var(--lg-bg-secondary);
+}
+
+.config-autocomplete-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    FLOATING BUTTON
    ═══════════════════════════════════════════════════════════════════════════ */
 

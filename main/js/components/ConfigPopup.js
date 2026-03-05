@@ -366,12 +366,22 @@ class ConfigPopup {
             });
         }
 
+        const autocompleteWrapper = document.createElement('div');
+        autocompleteWrapper.className = 'config-autocomplete-wrapper';
+
         const labelInput = document.createElement('input');
         labelInput.type = 'text';
         labelInput.className = 'config-label-input lg-input lg-input--sm';
         labelInput.placeholder = 'Nueva etiqueta + Enter';
         labelInput.style.width = '150px';
-        labelsContainer.appendChild(labelInput);
+        autocompleteWrapper.appendChild(labelInput);
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'config-autocomplete-dropdown';
+        dropdown.style.display = 'none';
+        autocompleteWrapper.appendChild(dropdown);
+
+        labelsContainer.appendChild(autocompleteWrapper);
 
         div.appendChild(labelsContainer);
 
@@ -401,10 +411,47 @@ class ConfigPopup {
         });
 
         const input = groupEl.querySelector('.config-label-input');
+        const dropdown = groupEl.querySelector('.config-autocomplete-dropdown');
+        let activeIndex = -1;
+
+        input.addEventListener('input', () => {
+            this._updateAutocomplete(input, dropdown, originalName);
+            activeIndex = -1;
+        });
+
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && input.value.trim()) {
-                this._addLabelToGroup(originalName, input.value.trim());
-                input.value = '';
+            const items = dropdown.querySelectorAll('.config-autocomplete-item');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = Math.min(activeIndex + 1, items.length - 1);
+                this._highlightAutocompleteItem(items, activeIndex);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, 0);
+                this._highlightAutocompleteItem(items, activeIndex);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeIndex >= 0 && items[activeIndex]) {
+                    this._selectAutocompleteItem(items[activeIndex].dataset.label, originalName, input, dropdown);
+                } else if (input.value.trim()) {
+                    this._selectAutocompleteItem(input.value.trim(), originalName, input, dropdown);
+                }
+                activeIndex = -1;
+            } else if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
+                activeIndex = -1;
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            // Delay para permitir click en el dropdown
+            setTimeout(() => { dropdown.style.display = 'none'; }, 150);
+        });
+
+        input.addEventListener('focus', () => {
+            if (input.value.trim()) {
+                this._updateAutocomplete(input, dropdown, originalName);
             }
         });
 
@@ -417,6 +464,62 @@ class ConfigPopup {
             groupEl.classList.add('config-group-item--selected');
             this.state.selectedGroup = originalName;
         });
+    }
+
+    _updateAutocomplete(input, dropdown, groupName) {
+        const query = input.value.trim().toLowerCase();
+        if (!query) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        const assignedLabels = new Set(
+            Object.values(this.state.groups).flatMap(g => g.labels)
+        );
+
+        const matches = this.state.projectLabels
+            .filter(l => l.name.toLowerCase().includes(query) && !assignedLabels.has(l.name))
+            .slice(0, 8);
+
+        if (matches.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        dropdown.innerHTML = '';
+        matches.forEach(label => {
+            const item = document.createElement('div');
+            item.className = 'config-autocomplete-item';
+            item.dataset.label = label.name;
+
+            const dot = document.createElement('span');
+            dot.className = 'config-autocomplete-dot';
+            dot.style.background = label.color;
+            item.appendChild(dot);
+
+            item.appendChild(document.createTextNode(label.name));
+
+            item.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this._selectAutocompleteItem(label.name, groupName, input, dropdown);
+            });
+
+            dropdown.appendChild(item);
+        });
+
+        dropdown.style.display = '';
+    }
+
+    _highlightAutocompleteItem(items, index) {
+        items.forEach((item, i) => {
+            item.classList.toggle('config-autocomplete-item--active', i === index);
+        });
+    }
+
+    _selectAutocompleteItem(labelName, groupName, input, dropdown) {
+        this._addLabelToGroup(groupName, labelName);
+        input.value = '';
+        dropdown.style.display = 'none';
     }
 
     _addGroup() {
