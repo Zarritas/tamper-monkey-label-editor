@@ -336,6 +336,25 @@ class ConfigPopup {
         exclusiveLabel.appendChild(document.createTextNode(' Exclusivo'));
         header.appendChild(exclusiveLabel);
 
+        const orderButtons = document.createElement('div');
+        orderButtons.className = 'config-group-order';
+
+        const upBtn = document.createElement('button');
+        upBtn.className = 'lg-btn lg-btn--ghost lg-btn--icon lg-btn--sm config-group-up';
+        upBtn.title = 'Subir';
+        upBtn.textContent = '\u25B2';
+        upBtn.addEventListener('click', () => this._moveGroup(groupName, -1));
+        orderButtons.appendChild(upBtn);
+
+        const downBtn = document.createElement('button');
+        downBtn.className = 'lg-btn lg-btn--ghost lg-btn--icon lg-btn--sm config-group-down';
+        downBtn.title = 'Bajar';
+        downBtn.textContent = '\u25BC';
+        downBtn.addEventListener('click', () => this._moveGroup(groupName, 1));
+        orderButtons.appendChild(downBtn);
+
+        header.appendChild(orderButtons);
+
         const deleteButton = document.createElement('button');
         deleteButton.className = 'lg-btn lg-btn--danger lg-btn--icon lg-btn--sm config-group-delete';
         deleteButton.title = 'Eliminar';
@@ -520,6 +539,24 @@ class ConfigPopup {
         this._addLabelToGroup(groupName, labelName);
         input.value = '';
         dropdown.style.display = 'none';
+    }
+
+    _moveGroup(groupName, direction) {
+        this._collectVisualData();
+        const keys = Object.keys(this.state.groups);
+        const index = keys.indexOf(groupName);
+        const newIndex = index + direction;
+
+        if (newIndex < 0 || newIndex >= keys.length) return;
+
+        // Swap
+        [keys[index], keys[newIndex]] = [keys[newIndex], keys[index]];
+
+        const reordered = {};
+        keys.forEach(key => { reordered[key] = this.state.groups[key]; });
+        this.state.groups = reordered;
+
+        this._renderVisualGroups();
     }
 
     _addGroup() {

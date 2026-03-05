@@ -721,6 +721,24 @@ body[data-gitlab-theme-id="6"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   GROUP ORDER BUTTONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.config-group-order {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-left: auto;
+}
+
+.config-group-order button {
+    padding: 0 4px;
+    font-size: 10px;
+    line-height: 1.2;
+    min-width: unset;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    AUTOCOMPLETE
    ═══════════════════════════════════════════════════════════════════════════ */
 
