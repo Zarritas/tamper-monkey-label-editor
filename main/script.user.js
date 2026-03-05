@@ -37,13 +37,7 @@
   GM_addStyle(GM_getResourceText("APP_CSS"));
 
   if (GitLabHelper.isGitLab()) {
-    GitLabHelper.waitForSidebar()
-      .then(() => {
-        const app = new LabelGroupsApp();
-        app.init();
-      })
-      .catch((err) => {
-        console.warn("[Label Groups] Sidebar not found:", err);
-      });
+    const app = new LabelGroupsApp();
+    app.init();
   }
 })();

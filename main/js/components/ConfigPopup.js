@@ -148,6 +148,32 @@ class ConfigPopup {
         this._refs.jsonErrorEl.style.display = 'none';
         jsonContent.appendChild(this._refs.jsonErrorEl);
 
+        // Import/Export buttons
+        const jsonActions = document.createElement('div');
+        jsonActions.className = 'config-json-actions';
+
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'lg-btn lg-btn--secondary lg-btn--sm';
+        exportBtn.textContent = '\uD83D\uDCE4 Exportar';
+        exportBtn.addEventListener('click', () => this._exportJson());
+        jsonActions.appendChild(exportBtn);
+
+        const importBtn = document.createElement('button');
+        importBtn.className = 'lg-btn lg-btn--secondary lg-btn--sm';
+        importBtn.textContent = '\uD83D\uDCE5 Importar';
+        importBtn.addEventListener('click', () => this._importJson());
+        jsonActions.appendChild(importBtn);
+
+        const importInput = document.createElement('input');
+        importInput.type = 'file';
+        importInput.accept = '.json';
+        importInput.style.display = 'none';
+        importInput.addEventListener('change', (e) => this._handleImportFile(e));
+        this._refs.importInput = importInput;
+        jsonActions.appendChild(importInput);
+
+        jsonContent.appendChild(jsonActions);
+
         const jsonHint = document.createElement('div');
         jsonHint.className = 'config-json-hint';
         jsonHint.textContent = 'Edita el JSON directamente. Los cambios se validarán al guardar.';
@@ -515,6 +541,52 @@ class ConfigPopup {
     // ═══════════════════════════════════════════════════════════════
     // ACTIONS
     // ═══════════════════════════════════════════════════════════════
+
+    _exportJson() {
+        if (this.state.activeTab === 'visual') {
+            this._collectVisualData();
+        }
+        const json = JSON.stringify(this.state.groups, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `label-groups-${LabelConfig.getProjectName()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        Toast.success('Configuración exportada');
+    }
+
+    _importJson() {
+        this._refs.importInput?.click();
+    }
+
+    _handleImportFile(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const parsed = JSON.parse(event.target.result);
+                if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+                    throw new Error('El archivo debe contener un objeto JSON');
+                }
+                this.state.groups = parsed;
+                this._renderVisualGroups();
+                if (this._refs.jsonEditor) {
+                    this._refs.jsonEditor.value = this._getJsonContent();
+                }
+                this._renderProjectLabels();
+                Toast.success('Configuración importada');
+            } catch (err) {
+                Toast.error(`Error al importar: ${err.message}`);
+            }
+        };
+        reader.readAsText(file);
+        // Reset para permitir reimportar el mismo archivo
+        e.target.value = '';
+    }
 
     _handleSave() {
         if (this.state.activeTab === 'visual') {

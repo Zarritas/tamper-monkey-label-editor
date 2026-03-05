@@ -32,39 +32,6 @@ class LabelGroupsApp {
     }
 
     addTriggerButton() {
-        const labelsBlock = document.querySelector(
-            '[data-testid="sidebar-labels"], .js-labels-block, .block.labels'
-        );
-
-        if (!labelsBlock) {
-            console.warn('[Label Groups] Labels block not found, using floating button');
-            this.addFloatingButton();
-            return;
-        }
-
-        const editBtn = labelsBlock.querySelector(
-            '.js-sidebar-dropdown-toggle, .edit-link, button[title="Edit"]'
-        );
-
-        if (editBtn) {
-            const btn = document.createElement('button');
-            btn.className = 'lg-trigger-btn';
-            btn.textContent = '\uD83C\uDFF7\uFE0F';
-            btn.title = 'Grupos de etiquetas';
-            btn.addEventListener('click', () => this.openLabelPopup());
-            editBtn.after(btn);
-            this.triggerButton = btn;
-        } else {
-            const btn = document.createElement('button');
-            btn.className = 'lg-btn lg-btn--secondary lg-btn--sm';
-            btn.textContent = '\uD83C\uDFF7\uFE0F Grupos';
-            btn.addEventListener('click', () => this.openLabelPopup());
-            labelsBlock.appendChild(btn);
-            this.triggerButton = btn;
-        }
-    }
-
-    addFloatingButton() {
         const btn = document.createElement('button');
         btn.className = 'lg-floating-btn';
         btn.textContent = '\uD83C\uDFF7\uFE0F';

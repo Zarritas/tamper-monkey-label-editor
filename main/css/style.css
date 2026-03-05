@@ -707,6 +707,12 @@ body[data-gitlab-theme-id="6"] {
     resize: vertical;
 }
 
+.config-json-actions {
+    display: flex;
+    gap: var(--lg-space-sm);
+    margin-top: var(--lg-space-sm);
+}
+
 .config-json-hint {
     margin-top: var(--lg-space-sm);
     font-size: 11px;
