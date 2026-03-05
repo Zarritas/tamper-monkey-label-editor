@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitLab Label Groups
 // @namespace    http://tampermonkey.net/
-// @version      2.1.1
+// @version      2.2.0
 // @description  Gestiona etiquetas de GitLab organizadas en grupos mutuamente excluyentes
 // @author       Jesús Lorenzo
 // @match        https://gitlab.com/*/-/issues/*

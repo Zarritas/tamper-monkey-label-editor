@@ -194,21 +194,14 @@ class LabelPopup {
             this.state.loading = true;
             this._updateFooter();
 
-            const applyResult = GitLabHelper.applyLabelsViaQuickAction(changes.toAdd, changes.toRemove);
-
-            if (!applyResult?.success) {
-                throw new Error(applyResult?.error || 'Failed to apply labels');
-            }
-
-            const commentResult = GitLabHelper.submitComment();
-
-            if (!commentResult?.success) {
-                throw new Error(commentResult?.error || 'Failed to submit comment');
-            }
+            await GitLabHelper.updateLabels(changes.toAdd, changes.toRemove);
 
             Toast.success(`Aplicado: +${changes.toAdd.length} -${changes.toRemove.length} etiquetas`);
             this.props.onApply?.(changes);
             this.props.onClose?.();
+
+            // Recargar para reflejar los cambios en la sidebar
+            setTimeout(() => location.reload(), 500);
         } catch (error) {
             console.error('[Label Popup] Error applying labels:', error);
             Toast.error('Error al aplicar etiquetas');

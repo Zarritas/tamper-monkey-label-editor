@@ -180,6 +180,27 @@ const GitLabHelper = (function() {
         return { success: false, error: 'Submit button not found or disabled' };
     }
 
+    async function updateLabels(addLabels = [], removeLabels = []) {
+        const ctx = getContext();
+        const fullPath = ctx.fullPath;
+        const iid = ctx.iid;
+        const resourceType = ctx.type === 'merge_request' ? 'merge_requests' : 'issues';
+
+        if (!fullPath || !iid) {
+            throw new Error('No se pudo determinar el proyecto o recurso');
+        }
+
+        const encodedPath = encodeURIComponent(fullPath);
+        const body = {};
+        if (addLabels.length > 0) body.add_labels = addLabels.join(',');
+        if (removeLabels.length > 0) body.remove_labels = removeLabels.join(',');
+
+        return apiRequest(`/api/v4/projects/${encodedPath}/${resourceType}/${iid}`, {
+            method: 'PUT',
+            body
+        });
+    }
+
     return {
         isGitLab,
         getContext,
@@ -189,6 +210,7 @@ const GitLabHelper = (function() {
         getLabels,
         getCurrentLabels,
         waitForSidebar,
+        updateLabels,
         applyLabelsViaQuickAction,
         submitComment
     };
